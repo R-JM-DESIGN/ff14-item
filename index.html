@@ -4,31 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게임 아이템 획득 체크리스트 도감</title>
-    <!-- 🌟 기존 템플릿 스타일 가이드 및 다크/라이트 모드 유동 변수 정의 -->
+    <!-- 🌟 스크린샷의 다크 모드 시그니처 컬러셋 및 라이트 모드 유동 변수 정의 -->
     <style>
         :root {
-            /* 다크 모드 (기본값) 변수 색상 프로토콜 */
-            --bg-color: #1a1c23;
-            --card-bg: #242834;
-            --border-color: #343a4a;
-            --text-main: #f1f3f5;
-            --text-muted: #9aa0a6;
-            --primary: #4ea8de;
+            --bg-color: #121212;             /* 완전 어두운 메인 배경 */
+            --card-bg: #1a1a1a;             /* 카드 및 섹션용 짙은 회색 배경 */
+            --inner-card: #222222;          /* 내부 서브 박스 배경 */
+            --border-color: #2c2c2c;        /* 은은한 외곽 경계선 컬러 */
+            --text-main: #e0e0e0;           /* 메인 텍스트 기본 화이트 */
+            --text-muted: #aaaaaa;          /* 안내 문구용 그레이 */
+            --primary: #4ea8de;             /* 메인 블루 포인트 */
             --primary-hover: #5bc0be;
-            --table-header: #1f2330;
-            --path-bg: #2e3440;
-            --path-text: #e5e9f0;
+            --accent-orange: #ff9f1c;       /* 포인트 강조용 오렌지 컬러 */
+            --table-header: #151515;        /* 테이블 헤더 전용 다크 그레이 */
+            --path-bg: #1f1f1f;
+            --path-text: #ffffff;
         }
 
-        /* ☀️ 라이트 모드 강제 치환 클래스 스코프 */
+        /* ☀️ 라이트 모드 변수 대응 */
         body.light-mode {
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
+            --inner-card: #f1f3f5;
             --border-color: #e9ecef;
             --text-main: #212529;
             --text-muted: #6c757d;
             --primary: #0077b6;
             --primary-hover: #0096c7;
+            --accent-orange: #d97706;
             --table-header: #f1f3f5;
             --path-bg: #e9ecef;
             --path-text: #495057;
@@ -49,50 +52,86 @@
             position: relative;
         }
 
-        /* 🌓 다크/라이트 모드 전환 토글 레이아웃 */
         .header-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
+            font-weight: 700;
             margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: #ffffff;
+        }
+        body.light-mode h1 {
+            color: #212529;
         }
 
         .theme-toggle-btn {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            padding: 10px 16px;
-            border-radius: 30px;
-            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s;
         }
 
         .theme-toggle-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
+            border-color: var(--accent-orange);
         }
 
-        .guide-text {
-            color: var(--text-muted);
-            font-size: 0.95rem;
+        /* 💡 이미지 속 상단 이용 안내 박스 완벽 커스텀 */
+        .info-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
             margin-bottom: 25px;
-            line-height: 1.5;
-            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .info-title {
+            color: var(--accent-orange);
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-list {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .info-list li {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 4px;
+            position: relative;
+            padding-left: 12px;
+        }
+
+        .info-list li::before {
+            content: "-";
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        .info-list li span.highlight {
+            color: #c5a3ff; /* 기존 메일 주소 강조용 연보라빛 매칭 */
+            font-weight: 500;
         }
 
         /* 📊 대시보드 프로그레스 바 레이아웃 */
@@ -106,10 +145,9 @@
         .dashboard-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 18px 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background-color 0.3s;
         }
 
         .card-header {
@@ -120,30 +158,32 @@
         }
 
         .card-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-muted);
         }
 
         .card-value {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--accent-orange); /* 진행 수치 오렌지 고정 */
         }
 
         .progress-container {
-            background-color: rgba(0,0,0,0.2);
+            background-color: #111111;
             border-radius: 50px;
-            height: 12px;
+            height: 10px;
             overflow: hidden;
             width: 100%;
+            border: 1px solid #222;
         }
         body.light-mode .progress-container {
             background-color: #e9ecef;
+            border: none;
         }
 
         .progress-bar {
-            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+            background: linear-gradient(90deg, #555555, #888888); /* 원본 그레이 게이지 매칭 */
             height: 100%;
             width: 0%;
             transition: width 0.4s ease-in-out;
@@ -153,15 +193,17 @@
         .search-section {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 20px;
             margin-bottom: 25px;
             transition: background-color 0.3s;
         }
 
         .search-label {
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            color: #93c5fd; /* 파란색 안내 톤 링크 스타일 매칭 */
+            margin-bottom: 12px;
             display: block;
         }
 
@@ -171,19 +213,23 @@
 
         .search-input {
             width: 100%;
-            background-color: var(--bg-color);
+            background-color: #111111;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px 16px;
-            color: var(--text-main);
-            font-size: 1rem;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 0.95rem;
             box-sizing: border-box;
             transition: border-color 0.2s, background-color 0.3s;
+        }
+        body.light-mode .search-input {
+            background-color: #ffffff;
+            color: #212529;
         }
 
         .search-input:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--accent-orange);
         }
     </style>
 </head>
@@ -197,9 +243,15 @@
             </button>
         </div>
         
-        <div class="guide-text">
-            - 인게임에서 획득 가능한 다양한 아이템들의 수집 현황을 실시간으로 추적하는 대시보드입니다.<br>
-            - 획득한 아이템을 체크하면 실시간으로 브라우저(Local Storage)에 영구 저장되어 언제든 이어서 확인할 수 있습니다.
+        <!-- 💡 스크린샷과 동일한 규격의 이용 안내 박스 적용 완료 -->
+        <div class="info-box">
+            <div class="info-title">💡 이용 안내</div>
+            <ul class="info-list">
+                <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
+                <li>개인 브라우저에 저장되는 사이트입니다. 로그인이 필요하지 않으나, 캐시 삭제 및 IP 변경 시 정보가 사라질 수 있습니다.</li>
+                <li>콘텐츠에 따라 획득 방법 스포일러가 있을 수 있으니 열람에 유의하십시오.</li>
+                <li>오타, 잘못된 정보 확인, 이외 문의·건의 사항은 <span class="highlight">질문방 또는 디스코드</span>로 보내주세요.</li>
+            </ul>
         </div>
 
         <!-- 📊 대시보드 영역 -->
@@ -238,9 +290,9 @@
 
         <!-- 🔍 통합 검색 영역 -->
         <div class="search-section">
-            <label class="search-label" for="search-keyword">🔍 실시간 아이템 통합 검색 (이름 / 패치 / 획득처 / 거래여부 검색)</label>
+            <label class="search-label" for="search-keyword">🔍 아이템 통합 검색</label>
             <div class="search-input-wrapper">
-                <input type="text" id="search-keyword" class="search-input" placeholder="검색어를 입력하시면 리스트가 즉시 필터링됩니다..." oninput="handleSearchInput()">
+                <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
             </div>
         </div>
         <!-- 추가 스타일 확장 정의 -->
@@ -255,7 +307,7 @@
             .filter-row {
                 background-color: var(--card-bg);
                 border: 1px solid var(--border-color);
-                border-radius: 12px;
+                border-radius: 8px;
                 padding: 15px 20px;
                 transition: background-color 0.3s;
             }
@@ -264,7 +316,7 @@
                 font-size: 0.9rem;
                 font-weight: 600;
                 color: var(--text-muted);
-                margin-bottom: 10px;
+                margin-bottom: 12px;
                 display: flex;
                 align-items: center;
                 gap: 6px;
@@ -278,51 +330,49 @@
 
             /* 공통 필터 버튼 스타일 프로토콜 */
             .btn-group button {
-                background-color: var(--bg-color);
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                color: var(--text-main);
+                background-color: #222222;
+                border: 1px solid #333333;
+                border-radius: 4px;
+                color: #dddddd;
                 padding: 8px 14px;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 cursor: pointer;
-                transition: all 0.2s, background-color 0.3s;
+                transition: all 0.15s, background-color 0.3s;
+            }
+            body.light-mode .btn-group button {
+                background-color: #e9ecef;
+                border: 1px solid #dee2e6;
+                color: #495057;
             }
 
             .btn-group button:hover {
-                border-color: var(--primary);
-                background-color: rgba(78, 168, 222, 0.1);
+                border-color: var(--accent-orange);
+                background-color: rgba(255, 159, 28, 0.1);
             }
 
+            /* 스크런샷 감성 액티브 컬러 매칭 */
             .btn-group button.active {
-                background-color: var(--primary);
-                border-color: var(--primary);
+                background-color: #3b82f6; /* 파란색 활성화 */
+                border-color: #3b82f6;
                 color: #ffffff;
                 font-weight: bold;
             }
-            body.light-mode .btn-group button.active {
-                color: #ffffff;
-            }
-
-            /* 상태 및 장게용 전용 컬러링 분기 */
             .btn-group button.status-filter-btn.active {
-                background-color: #5bc0be;
-                border-color: #5bc0be;
-                color: #ffffff;
+                background-color: #10b981; /* 초록색 활성화 */
+                border-color: #10b981;
             }
-
             .btn-group button.reward-filter-btn.active {
-                background-color: #ff9f1c;
-                border-color: #ff9f1c;
-                color: #ffffff;
+                background-color: #ef4444; /* 핫핑크/레드 필터해제 매칭 */
+                border-color: #ef4444;
             }
 
             .path-display-box {
                 background-color: var(--path-bg);
-                border-left: 4px solid var(--primary);
+                border-left: 4px solid var(--accent-orange);
                 padding: 12px 18px;
                 border-radius: 4px;
                 font-weight: 600;
-                font-size: 1.05rem;
+                font-size: 0.95rem;
                 margin-bottom: 20px;
                 color: var(--path-text);
                 transition: background-color 0.3s, color 0.3s;
@@ -341,9 +391,9 @@
                 </div>
             </div>
 
-            <!-- 2. 대분류 분류 필터 (A열 기준 동적 생성) -->
+            <!-- 2. 카테고리 필터 (A열 기준 동적 생성) -->
             <div class="filter-row">
-                <div class="filter-title">📁 대분류 카테고리 선택 (A열)</div>
+                <div class="filter-title">📁 카테고리 선택</div>
                 <div id="main-category-group" class="btn-group">
                     <button class="active">로딩 중...</button>
                 </div>
@@ -355,9 +405,9 @@
                 <div id="sub-category-group" class="btn-group"></div>
             </div>
 
-            <!-- 4. 장터게시판 여부 필터 (F열 기준 동적 생성) -->
+            <!-- 4. 거래 여부 필터 (F열 기준 동적 생성) -->
             <div class="filter-row">
-                <div class="filter-title">⚖️ 장터게시판 거래 여부 필터 (F열)</div>
+                <div class="filter-title">⚖️ 거래 여부</div>
                 <div id="reward-category-group" class="btn-group">
                     <button class="reward-filter-btn active">로딩 중...</button>
                 </div>
@@ -369,115 +419,115 @@
             데이터를 로드하고 있습니다...
         </div>
         <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
-        <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
         <style>
             .table-responsive {
                 overflow-x: auto;
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                transition: background-color 0.3s;
+                /* 🎨 스크린샷과 동일한 진한 블랙 카드 배경 및 둥근 모서리 구현 */
+                background-color: #1a1a1a;
+                border: 1px solid #2a2a2a;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
                 margin-bottom: 60px;
+                padding: 10px;
             }
 
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
+                /* 🌟 전체 중앙 정렬 고정 */
                 text-align: center;
                 font-size: 0.95rem;
+                background-color: #1a1a1a;
             }
 
             .item-table th {
-                background-color: var(--table-header);
-                color: var(--text-muted);
+                /* 🎨 스크린샷의 짙은 블랙 헤더 색상 매칭 */
+                background-color: #151515;
+                color: #aaaaaa;
                 padding: 14px 16px;
                 font-weight: 600;
-                border-bottom: 2px solid var(--border-color);
+                border-bottom: 2px solid #2a2a2a;
                 white-space: nowrap;
-                transition: background-color 0.3s;
                 text-align: center;
             }
 
             .item-table td {
                 padding: 12px 16px;
-                border-bottom: 1px solid var(--border-color);
+                border-bottom: 1px solid #222222;
                 vertical-align: middle;
-                color: var(--text-main);
-                transition: color 0.3s;
+                color: #e0e0e0;
             }
 
-            /* 🌟 [정밀 균형 비율 재분배 스코프] */
-            .col-no { width: 5%; color: var(--text-muted); }
+            /* 🌟 [초정밀 황금 비율 너비 설정 수용] */
+            .col-no { width: 5%; color: #888888; }
             .col-check { width: 6%; }
             .col-icon { width: 8%; }
             
-            /* ⚡ [이름] 기존 23%에서 딱 보기 좋은 '28%'로 적당히 늘려 균형 조율 완료 */
-            .col-name { width: 28%; font-weight: bold; }
+            /* [이름] 과도하지 않은 최적의 28% 영역 및 굵은 글씨 지정 */
+            .col-name { width: 28%; font-weight: bold; color: #ffffff; }
             
-            /* [패치] 7.58 규격 맞춤 최소 타이트 고정 유지 */
+            /* [패치] 7.58 규격 맞춤 최소 타이트 고정 및 줄바꿈 원천 차단 */
             .col-cond { 
                 width: 1%; 
                 white-space: nowrap; 
                 padding-left: 5px; 
                 padding-right: 5px;
                 font-weight: 500; 
+                color: #93c5fd; /* 패치 버전 정보 블루톤 매칭 */
             }
             
-            /* ⚡ [획득처] 이름이 늘어난 만큼만 자연스럽게 양보하여 '42%'로 안정감 있게 세팅 */
-            .col-score { width: 42%; }
+            /* [획득처] 넉넉하고 시원한 42% 면적 고정 */
+            .col-score { width: 42%; color: #cccccc; }
             
             .col-rw-type { width: 10%; }
 
+            /* 🎨 체크박스 인게임 스타일 스케일 및 색상 싱크 */
             .item-table input[type="checkbox"] {
                 width: 18px;
                 height: 18px;
                 cursor: pointer;
-                accent-color: var(--primary);
+                accent-color: #ff9f1c; /* 체크 시 포인트 오렌지 컬러 발색 */
             }
 
-            /* 획득 완료 처리 행 상태 연출 */
+            /* 🎨 획득 완료 처리 행 상태 연출 (스크린샷처럼 완료 시 텍스트 어둡게 처리) */
             .item-table tr.completed {
-                background-color: rgba(78, 168, 222, 0.04);
-            }
-            body.light-mode .item-table tr.completed {
-                background-color: rgba(0, 119, 182, 0.03);
+                background-color: rgba(255, 255, 255, 0.01);
             }
             .item-table tr.completed td {
-                color: var(--text-muted);
+                color: #444444 !important; /* 완료 항목은 눈에 띄지 않게 어둡게 톤 다운 */
             }
             .item-table tr.completed .col-name {
-                text-decoration: line-through;
+                text-decoration: line-through; /* 취소선 추가 */
+                color: #444444 !important;
+            }
+            .item-table tr.completed .col-cond {
+                color: #444444 !important;
             }
 
+            /* 은은한 로우 호버 효과 */
             .item-table tr:hover {
-                background-color: rgba(255, 255, 255, 0.02);
-            }
-            body.light-mode .item-table tr:hover {
-                background-color: rgba(0, 0, 0, 0.01);
+                background-color: rgba(255, 255, 255, 0.01);
             }
 
-            /* 🔝 플로팅 TOP 버튼 컴포넌트 */
+            /* 🔝 플로팅 TOP 버튼 컴포넌트 (스크린샷 감성 사각형 모서리 가공) */
             .top-scroll-btn {
                 position: fixed;
                 bottom: 30px;
                 right: 30px;
-                width: 48px;
-                height: 48px;
-                background-color: var(--primary);
-                border: none;
-                border-radius: 50%;
+                width: 44px;
+                height: 44px;
+                background-color: #2a2a2a;
+                border: 1px solid #444444;
+                border-radius: 4px; /* 라운드 대신 각진 스타일 매칭 */
                 color: #ffffff;
-                font-size: 1.2rem;
-                font-weight: bold;
+                font-size: 1rem;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
                 opacity: 0;
                 visibility: hidden;
-                transition: all 0.3s ease;
+                transition: all 0.2s ease;
                 z-index: 999;
             }
 
@@ -487,8 +537,8 @@
             }
 
             .top-scroll-btn:hover {
-                background-color: var(--primary-hover);
-                transform: translateY(-4px);
+                border-color: #ff9f1c;
+                color: #ff9f1c;
             }
         </style>
 
