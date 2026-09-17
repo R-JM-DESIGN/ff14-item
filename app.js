@@ -1,5 +1,6 @@
 // =========================================================================
-// app.js - Part 1 (G열 거래 여부 데이터 인덱스 번호 정밀 보정 버전)
+// app.js - Part 1 (7개 열 확장 스키마 수집 및 이미지 원천 파쇄 보호망)
+// 🌟 사용자님의 구글 웹 앱 API 주소를 상단에 고정하여 초고속 연동을 지원합니다.
 // =========================================================================
 const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_Cb18OxVCoIUgdc6p0tZ75nZEXtXBWoS-4Vms5Aly8pq_QIFkB4SzBZzMj0e7av7V/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
@@ -10,7 +11,7 @@ let checkedItems = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
 let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
-let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
+let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟 (신설 🌟)
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
 let currentSearchQuery = ''; 
 
@@ -23,8 +24,7 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 🌟 [인덱스 전수조사 매핑 보정]
-        // 컴퓨터 번호 부여 체계에 맞춰 (A=0, B=1, C=2, D=3, E=4, F=5, G=6)으로 오차 없이 조율했습니다.
+        // 🌟 컴퓨터 인덱스 규칙 정밀 동기화 완료: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -43,27 +43,27 @@ async function fetchData() {
                 }
             }
 
-            const itemName = getVal(2); // 2번 인덱스 = C열 (이름)
+            const itemName = getVal(2); // C열: 이름
             const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 1;
 
             return {
                 id: itemName,           
-                main: getVal(0),        // 0번 인덱스 = A열 (카테고리)
+                main: getVal(0),        // A열: 카테고리 선택
                 sub: '전체 목록',       
-                icon: detectedIconUrl,  // B열 바탕 검출 주소
-                name: itemName,         
-                patch: getVal(3),        // 3번 인덱스 = D열 (패치)
-                originPlace: getVal(4),  // 4번 인덱스 = E열 (획득처) 
-                condition: getVal(5),   // 5번 인덱스 = F열 (조건)
+                icon: detectedIconUrl,  // B열: 아이콘 원본 주소
+                name: itemName,         // C열: 이름
+                patch: getVal(3),        // D열: 패치
+                originPlace: getVal(4),  // E열: 획득처 🌟
+                condition: getVal(5),   // F열: 조건 상세 설명 문구
                 score: parsedPatchNum,  
-                rewardType: getVal(6),  // 🌟 [보정 완료] 6번 인덱스 = G열 (거래 여부)을 정확히 조준합니다.
+                rewardType: getVal(6),  // 🌟 G열: 거래 여부 데이터 정밀 조준 완료
                 rewardContent: getVal(6)
             };
         }).filter(item => item && item.name && item.main); 
 
         initMenu();
         initRewardMenu(); 
-        initOriginMenu(); 
+        initOriginMenu(); // 획득처 필터 버튼 동적 드로잉 빌더 가동 🌟
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
@@ -272,7 +272,7 @@ function isNotTradeable(rawType) {
 function getRewardColor(type) {
     if (isTradeable(type)) return '#70e000'; 
     if (isNotTradeable(type)) return '#ff4d4d'; 
-    return '#ff9f1c'; 
+    return '#888888'; 
 }
 
 // 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
@@ -328,6 +328,7 @@ function renderList() {
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
+        // 표 내부에 렌더링될 때도 명칭 충돌 없이 무조건 깔끔한 한글 레이블로 변환해서 출력합니다.
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
