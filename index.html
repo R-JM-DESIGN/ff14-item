@@ -364,7 +364,7 @@
             </div>
         </div>
 
-        <!-- 🌟 요청하신 문구로 깔끔하게 수정 완료되었습니다. -->
+        <!-- 현재 필터링 상태 디스플레이 창 -->
         <div id="current-path-display" class="path-display-box">
             데이터를 로드하고 있습니다...
         </div>
@@ -383,7 +383,8 @@
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
-                text-align: left;
+                /* 🌟 머리글 및 아래 항목들까지 전체 중앙 정렬 고정 */
+                text-align: center;
                 font-size: 0.95rem;
             }
 
@@ -395,6 +396,7 @@
                 border-bottom: 2px solid var(--border-color);
                 white-space: nowrap;
                 transition: background-color 0.3s;
+                text-align: center;
             }
 
             .item-table td {
@@ -405,14 +407,25 @@
                 transition: color 0.3s;
             }
 
-            /* 가이드 고정 가로폭 레이아웃 */
-            .col-no { width: 5%; text-align: center; color: var(--text-muted); }
-            .col-check { width: 6%; text-align: center; }
-            .col-icon { width: 8%; text-align: center; }
+            /* 🌟 [초정밀 너비 커스텀 분배 스코프] */
+            .col-no { width: 5%; color: var(--text-muted); }
+            .col-check { width: 6%; }
+            .col-icon { width: 8%; }
             .col-name { width: 23%; font-weight: bold; }
-            .col-cond { width: 10%; font-weight: 500; }
-            .col-score { width: 38%; }
-            .col-rw-type { width: 10%; text-align: center; }
+            
+            /* ⚡ [패치] 7.58 크기에 맞춤 타이트 고정 (줄바꿈 원천 차단 및 폭 최소화) */
+            .col-cond { 
+                width: 1%; 
+                white-space: nowrap; 
+                padding-left: 5px; 
+                padding-right: 5px;
+                font-weight: 500; 
+            }
+            
+            /* ⚡ [획득처] 패치에서 줄인 잔여 폭을 전부 흡수하여 최대 크기(47%)로 확장 */
+            .col-score { width: 47%; }
+            
+            .col-rw-type { width: 10%; }
 
             .item-table input[type="checkbox"] {
                 width: 18px;
@@ -477,7 +490,7 @@
             }
         </style>
 
-        <!-- 6개 도감 컬럼 스키마 반영 메인 테이블 피드 (명칭 변경 적용) -->
+        <!-- 6개 도감 컬럼 스키마 반영 메인 테이블 피드 -->
         <div class="table-responsive">
             <table class="item-table">
                 <thead>
