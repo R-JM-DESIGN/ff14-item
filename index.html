@@ -148,6 +148,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            
         }
 
         .metric-header {
@@ -441,7 +442,6 @@
                 <div class="filter-half-column">
                     <div class="filter-title">🗺️ 획득처 필터</div>
                     <div id="condition-category-group" class="btn-group">
-                        <!-- app.js가 시트 E열 원본 문자열을 추려 동적 생성하는 영역 -->
                         <button class="condition-filter-btn active">로딩 중...</button>
                     </div>
                 </div>
@@ -581,7 +581,8 @@
                         <th>패치</th>
                         <th>획득처</th>
                         <th>조건</th>
-                        <th style="text-align: center;">장게 거래</th>
+                        <!-- 🌟 [장게 거래] ➡️ [거래 여부] 명칭 치환 최종 전면 적용 완료! -->
+                        <th style="text-align: center;">거래 여부</th>
                     </tr>
                 </thead>
                 <tbody id="achievement-list">
