@@ -2,7 +2,7 @@
 // app.js - Part 1 (7개 열 확장 스키마 수집 및 이미지 원천 파쇄 보호망)
 // 🌟 사용자님의 구글 웹 앱 API 주소를 상단에 고정하여 초고속 연동을 지원합니다.
 // =========================================================================
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_Cb18OxVCoIUgdc6p0tZ75nZEXtXBWoS-4Vms5Aly8pq_QIFkB4SzBZzMj0e7av7V/exec';
+const GOOGLE_WEB_APP_URL = 'https://google.com';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
@@ -91,7 +91,7 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (검색어 원터치 초기화 트리거 신설 및 지능형 리셋 시스템)
+// app.js - Part 2 (교집합 다중 연동 필터 및 지능형 리셋 시스템)
 // =========================================================================
 
 function selectSortOrder(order) {
@@ -131,7 +131,7 @@ function selectMainCategory(main, btn) {
     document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    document.getElementById('current-path-display').textContent = `📂 분류 : ${currentMain}`;
+    updatePathDisplay();
     renderList();
 }
 
@@ -215,15 +215,13 @@ function clearOriginDropdownFilter() {
     renderList();
 }
 
-// 🌟 [신설] 검색창 초기화(Clear) 단추 클릭 시 인풋박스를 원터치로 청소하고 즉시 원복 렌더링
 function clearSearchInputFilter() {
-    if (!currentSearchQuery) return; // 이미 검색어가 비어있다면 가동 생략
+    if (!currentSearchQuery) return; 
     
     currentSearchQuery = '';
     const searchInput = document.getElementById('search-keyword');
-    if (searchInput) searchInput.value = ''; // 검색 인풋 입력칸 텍스트 강제 삭제
+    if (searchInput) searchInput.value = ''; 
     
-    // 복합 다중 필터가 모두 꺼져 있다면 기본 카테고리로 원복 알림 갱신
     if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
         const activeMainBtn = document.querySelector('#main-category-group button.active');
         if (activeMainBtn) currentMain = activeMainBtn.textContent;
@@ -253,6 +251,7 @@ function restoreDefaultCategory() {
     }
 }
 
+// 🌟 [통합 알림 디스플레이 정상화] 테이블 구조를 파괴하지 않고 독립된 전용 하단 알림 상자 텍스트만 유연하게 바꿉니다.
 function updatePathDisplay() {
     const display = document.getElementById('current-path-display');
     if (!display) return;
@@ -278,7 +277,7 @@ function resetOriginDropdownUI() {
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (교집합 연산 정렬 스코프 및 8열 무결성 렌더링)
+// app.js - Part 3 (게이지바 복구 핵심 알고리즘 탑재 및 최종 연산 마감)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -305,7 +304,6 @@ function renderList() {
 
     let filtered = [];
     if (!currentSearchQuery) {
-        // 복합 누적 다중 교집합 필터링 연산 수행
         filtered = rawData.filter(item => {
             if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
                 if (item.main !== currentMain) return false;
@@ -318,7 +316,6 @@ function renderList() {
             return true;
         });
     } else {
-        // 통합 검색바 작동 처리
         filtered = rawData.filter(item => {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
@@ -424,6 +421,7 @@ function toggleItem(id, checkbox) {
     }
 }
 
+// 🌟 [전체 달성도 오리지널 복구 완결] HTML 구조를 깨뜨리지 않고 프로그레스 가로형 바를 선명하게 주입합니다.
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -434,20 +432,21 @@ function calculateTotalProgress() {
     document.getElementById('total-percent').textContent = `${percent}%`;
     document.getElementById('total-count').textContent = `${checkedCount}/${total}`;
     document.getElementById('total-bar').style.width = `${percent}%`;
-
-    document.getElementById('score-total').textContent = checkedCount.toLocaleString();
-    document.getElementById('score-max').textContent = total.toLocaleString();
-    document.getElementById('score-bar').style.width = `${percent}%`;
 }
 
+// 🌟 [현재 분류 수집율 오리지널 복구 완결] 필터 상황에 맞춰 제목 텍스트만 안전하게 수정하고 민트색 게이지바 그래프를 정상화합니다.
 function calculateChapterProgress(currentItems) {
     const total = currentItems.length;
-    if (currentSearchQuery) {
-        document.getElementById('chapter-percent').parentElement.firstChild.textContent = "검색 아이템 보유율: ";
-    } else if (currentRewardFilter !== 'ALL' || currentOriginFilter !== 'ALL') {
-        document.getElementById('chapter-percent').parentElement.firstChild.textContent = "선택 필터 아이템 보유율: ";
-    } else {
-        document.getElementById('chapter-percent').parentElement.firstChild.textContent = "현재 분류 아이템 보유율: ";
+    const titleLabel = document.getElementById('chapter-title-label');
+    
+    if (titleLabel) {
+        if (currentSearchQuery) {
+            titleLabel.textContent = "검색 아이템 보유율";
+        } else if (currentRewardFilter !== 'ALL' || currentOriginFilter !== 'ALL') {
+            titleLabel.textContent = "선택 필터 아이템 보유율";
+        } else {
+            titleLabel.textContent = "현재 분류 아이템 보유율";
+        }
     }
 
     if(total === 0) {
