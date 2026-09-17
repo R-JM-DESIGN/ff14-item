@@ -369,6 +369,7 @@
             데이터를 로드하고 있습니다...
         </div>
         <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
+        <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
         <style>
             .table-responsive {
                 overflow-x: auto;
@@ -383,7 +384,6 @@
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
-                /* 머리글 및 아래 항목들까지 전체 중앙 정렬 고정 */
                 text-align: center;
                 font-size: 0.95rem;
             }
@@ -407,13 +407,13 @@
                 transition: color 0.3s;
             }
 
-            /* 🌟 [요청 사양에 맞춘 너비 커스텀 재분배 스코프] */
+            /* 🌟 [정밀 균형 비율 재분배 스코프] */
             .col-no { width: 5%; color: var(--text-muted); }
             .col-check { width: 6%; }
             .col-icon { width: 8%; }
             
-            /* ⚡ [이름] 기존 23% -> 38%로 대폭 확장하여 가독성 업그레이드 완료 */
-            .col-name { width: 38%; font-weight: bold; }
+            /* ⚡ [이름] 기존 23%에서 딱 보기 좋은 '28%'로 적당히 늘려 균형 조율 완료 */
+            .col-name { width: 28%; font-weight: bold; }
             
             /* [패치] 7.58 규격 맞춤 최소 타이트 고정 유지 */
             .col-cond { 
@@ -424,8 +424,8 @@
                 font-weight: 500; 
             }
             
-            /* ⚡ [획득처] 기존 47% -> 32%로 15% 감축 완료 */
-            .col-score { width: 32%; }
+            /* ⚡ [획득처] 이름이 늘어난 만큼만 자연스럽게 양보하여 '42%'로 안정감 있게 세팅 */
+            .col-score { width: 42%; }
             
             .col-rw-type { width: 10%; }
 
