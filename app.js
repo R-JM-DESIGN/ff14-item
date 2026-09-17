@@ -1,19 +1,20 @@
-// app.js - Part 1
-// 🌟 사용자님의 실제 구글 웹 앱 주소를 최상단에 고정하여 CORS 우회 연동을 지원합니다.
+// =========================================================================
+// app.js - Part 1 (데이터 로딩 및 카테고리 제어 스코프)
+// 🌟 사용자님의 구글 웹 앱 주소를 고정하여 CORS 보안을 우회 연동합니다.
+// =========================================================================
 const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzb9Fme3-R6FL-twHsbKrBQg4uMHgaiQlU57RPBsi5PW1GEPuwrZnRtyc4B5jZYHeJ/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
-// 기존 FF14 업적 스토리지 키와 분리된 고유의 로컬 스토리지 데이터베이스 키 고정
 const STORAGE_KEY = 'game_item_checklist_v3';
 let checkedItems = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
 let currentMain = '';            // A열: 분류 필터링 타겟
-let currentRewardFilter = 'ALL';       // F열: 장게 여부 필터링 타겟
-let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터
+let currentRewardFilter = 'ALL';       // F열: 거래 여부 필터링 타겟
+let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
 let currentSearchQuery = ''; 
 
-// 1. 앱스 스크립트 이미지 파싱 스트림을 우회 경유하여 데이터 세트 로드
+// 1. 원격 구글 시트 데이터 비동기 인프라 로드 및 6개 컬럼 스키마 정밀 매핑
 async function fetchData() {
     try {
         const res = await fetch(SHEET_URL);
@@ -22,27 +23,25 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 스키마 순서: A분류 / B아이콘(URL) / C이름 / D패치 / E획득처 / F장게여부
         rawData = rows.slice(1).map((row) => {
             const getVal = (colIdx) => {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
             const itemName = getVal(2); // C열: 이름
-            // D열 패치 명칭 정보(예: v6.5, 7.0)에서 연산용 실수/정수 가중치 분리 파싱
             const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 1;
 
             return {
-                id: itemName,           // 아이템 이름을 변동 없는 고유 체크 키값으로 고정
+                id: itemName,           
                 main: getVal(0),        // A열: 분류
-                sub: '전체 목록',       // UI 호환 유지를 위한 가상 싱글 서브 카테고리 트리 매핑
-                icon: getVal(1),        // B열: 파싱된 셀 내 이미지 웹 주소
+                sub: '전체 목록',       
+                icon: getVal(1),        // B열: 파싱된 이미지 웹 주소
                 name: itemName,         // C열: 이름
-                patch: getVal(3),        // D열: 패치 버전
-                condition: getVal(4),   // E열: 획득처 및 조건
-                score: parsedPatchNum,  // 게이지 바 컴포넌트 하이라이트 동적 싱크용 수치 데이터 
-                rewardType: getVal(5),  // F열: 장게 여부 (필터 스위치로 우회 가공)
-                rewardContent: getVal(5)// 레이아웃 호환용 서브 밸류 복사
+                patch: getVal(3),        // D열: 패치
+                condition: getVal(4),   // E열: 획득처
+                score: parsedPatchNum,  
+                rewardType: getVal(5),  // F열: 거래 여부
+                rewardContent: getVal(5)
             };
         }).filter(item => item.name && item.main); 
 
@@ -51,35 +50,32 @@ async function fetchData() {
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
-        // 사용자 요청 사양에 맞추어 깔끔하게 에러 디스플레이 가이드 문구 출력
         document.getElementById('achievement-list').innerHTML = `
             <tr><td colspan="7" style="text-align: center; color: #ff4d4d; font-weight: bold; padding: 40px;">
-                데이터베이스 연동 및 로드 과정에 오류가 발생했습니다.<br>
+                데이터베이스를 연동하는 중입니다... 오류 발생<br>
                 <span style="color: #aaa; font-size: 0.9em; font-weight: normal;">원인: ${error.message}</span>
             </td></tr>`;
     }
 }
 
-// 2. 검색 인터페이스 키인 핸들러
+// 2. 검색 인터페이스 키인 타이핑 인풋 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
     currentSearchQuery = inputElement.value.trim().toLowerCase();
-    renderList(); // 인풋이 변동될 때마다 즉시 가상 돔 필터 렌더링 스코프 실행
+    renderList(); 
 }
 
-// 3. 획득 상태 스위칭 서브 컨트롤러
+// 3. 아이템 획득 상태(보유/미보유) 스위칭 서브 컨트롤러
 function selectStatusFilter(status) {
     currentStatusFilter = status;
-    
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
     if(status === 'ALL') document.getElementById('status-all').classList.add('active');
     if(status === 'UNCOMPLETED') document.getElementById('status-uncompleted').classList.add('active');
     if(status === 'COMPLETED') document.getElementById('status-completed').classList.add('active');
-
     renderList();
 }
 
-// 4. 대분류 카테고리(A열) 최적화 동적 생성 노드 빌더
+// 4. 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
 function initMenu() {
     const mains = [...new Set(rawData.map(item => item.main))];
     const mainGroup = document.getElementById('main-category-group');
@@ -90,7 +86,7 @@ function initMenu() {
         const btn = document.createElement('button');
         btn.textContent = main;
         btn.onclick = () => selectMainCategory(main, btn);
-        if(idx === 0) btn.click(); // 최초 첫 번째 대분류 노드 버튼 자동 호출
+        if(idx === 0) btn.click(); 
         mainGroup.appendChild(btn);
     });
 }
@@ -103,7 +99,6 @@ function selectMainCategory(main, btn) {
     document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // 숨겨진 소분류 영역 버블링 방지 플레이스홀더 싱크 제어
     const subGroup = document.getElementById('sub-category-group');
     subGroup.innerHTML = '';
     const sBtn = document.createElement('button');
@@ -114,16 +109,18 @@ function selectMainCategory(main, btn) {
     document.getElementById('current-path-display').textContent = `📂 분류 : ${currentMain}`;
     renderList();
 }
-// app.js - Part 2
+// =========================================================================
+// app.js - Part 2 (거래 여부 스마트 리셋 및 실시간 렌더링 엔진)
+// =========================================================================
 
-// 5. 장터게시판 거래 가능 상태(F열) 수집형 필터 스위치 바인딩
+// 5. 거래 여부(F열) 필터 버튼 동적 생성 및 이름 완벽 치환 + 자동 리셋 인터페이스
 function initRewardMenu() {
     const rewardTypes = [...new Set(rawData.map(item => item.rewardType))].filter(t => t && t !== '-');
     const rewardGroup = document.getElementById('reward-category-group');
     rewardGroup.innerHTML = '';
 
     const allBtn = document.createElement('button');
-    allBtn.textContent = '장게 여부: 전체'; 
+    allBtn.textContent = '필터 해제'; 
     allBtn.classList.add('reward-filter-btn', 'active');
     allBtn.id = 'rw-btn-all';
     allBtn.onclick = () => selectRewardFilter('ALL', allBtn);
@@ -131,24 +128,51 @@ function initRewardMenu() {
 
     rewardTypes.forEach(type => {
         const btn = document.createElement('button');
-        btn.textContent = `장게: ${type}`; 
+        let displayBtnText = type;
+        const cleanType = type.trim().toUpperCase();
+        
+        if (cleanType === 'O' || cleanType === 'Y' || cleanType.includes('가능')) {
+            displayBtnText = '거래 가능';
+        } else if (cleanType === 'X' || cleanType === 'N' || cleanType.includes('불가')) {
+            displayBtnText = '거래 불가';
+        }
+        
+        btn.textContent = displayBtnText; 
         btn.classList.add('reward-filter-btn');
-        btn.onclick = () => selectRewardFilter(type, btn);
+        btn.onclick = () => selectRewardFilter(type, btn); 
         rewardGroup.appendChild(btn);
     });
 }
 
+// 🌟 [스마트 로직] 거래 여부 필터 타격 시 복합 조건 꼬임 타파용 원격 자동 해제 알고리즘
 function selectRewardFilter(type, btn) {
     currentRewardFilter = type;
-    
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
     if (type === 'ALL') {
         document.getElementById('current-path-display').textContent = `📂 분류 : ${currentMain}`;
     } else {
+        // 1. 보유 상태 필터를 무조건 [전체 목록 보기] 상태로 연동 리셋
+        currentStatusFilter = 'ALL';
+        document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
+        const statusAllBtn = document.getElementById('status-all');
+        if (statusAllBtn) statusAllBtn.classList.add('active');
+
+        // 2. 검색창에 입력 중이던 문자열 텍스트 데이터도 공백으로 완전 클리어
+        currentSearchQuery = '';
+        const searchInput = document.getElementById('search-keyword');
+        if (searchInput) searchInput.value = '';
+
+        // 3. 특정 카테고리에 갇히지 않도록 활성화 버튼 불빛을 전량 제거하고 전체 횡단 서치 모드로 전환
         document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
-        document.getElementById('current-path-display').textContent = `⚖️ [필터] 장터게시판 거래 여부 : ${type}`; 
+        
+        let displayPathText = type;
+        const cleanType = type.trim().toUpperCase();
+        if (cleanType === 'O' || cleanType === 'Y' || cleanType.includes('가능')) displayPathText = '거래 가능';
+        else if (cleanType === 'X' || cleanType === 'N' || cleanType.includes('불가')) displayPathText = '거래 불가';
+
+        document.getElementById('current-path-display').textContent = `⚖️ [필터] 거래 여부 : ${displayPathText} (다른 필터가 자동 해제되었습니다)`; 
     }
     renderList();
 }
@@ -159,22 +183,20 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 
-// 인게임 장게 거래 상태 성격별 유동적 텍스트 색상 분기 처리 가이드
 function getRewardColor(type) {
     if (!type) return '#888888';
-    const cleanType = type.trim();
-    if (cleanType.includes('가능') || cleanType === 'O' || cleanType === 'Y') return '#70e000'; // 라이트/다크 호환 수용성 초록
-    if (cleanType.includes('불가') || cleanType === 'X' || cleanType === 'N') return '#ff4d4d'; // 주의/경고용 유동 레드
-    return '#ff9f1c'; // 기타 속성용 오렌지
+    const cleanType = type.trim().toUpperCase();
+    if (cleanType.includes('가능') || cleanType === 'O' || cleanType === 'Y') return '#70e000'; 
+    if (cleanType.includes('불가') || cleanType === 'X' || cleanType === 'N') return '#ff4d4d'; 
+    return '#ff9f1c'; 
 }
 
-// 6. 복합 조건문 정렬 알고리즘 및 6개 컬럼 테이블 마크업 동적 주입 프로토콜
+// 6. 복합 정렬 가상 인프라 계산 알고리즘 및 테이블 마크업 실시간 주입 (렌더링 핵심 엔진)
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
 
     let filtered = [];
-    
     if (!currentSearchQuery) {
         if (currentRewardFilter === 'ALL') {
             filtered = rawData.filter(item => item.main === currentMain);
@@ -183,13 +205,11 @@ function renderList() {
         }
     } else {
         filtered = rawData.filter(item => {
-            const nameMatch = item.name.toLowerCase().includes(currentSearchQuery);
-            const patchMatch = item.patch.toLowerCase().includes(currentSearchQuery);
-            const condMatch = item.condition.toLowerCase().includes(currentSearchQuery);
-            const typeMatch = item.rewardType.toLowerCase().includes(currentSearchQuery);
-            return nameMatch || patchMatch || condMatch || typeMatch;
+            return item.name.toLowerCase().includes(currentSearchQuery) || 
+                   item.patch.toLowerCase().includes(currentSearchQuery) || 
+                   item.condition.toLowerCase().includes(currentSearchQuery) || 
+                   item.rewardType.toLowerCase().includes(currentSearchQuery);
         });
-        
         document.getElementById('current-path-display').textContent = `🔍 전체 도감 내 '${currentSearchQuery}' 검색 결과 (총 ${filtered.length}건)`;
     }
 
@@ -200,7 +220,7 @@ function renderList() {
     }
 
     if (filtered.length === 0) {
-        listBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #888;">조건 및 검색 상태에 부합하는 아이템이 존재하지 않습니다.</td></tr>`;
+        listBody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #888;">조건에 맞는 아이템이 존재하지 않습니다.</td></tr>`;
         calculateChapterProgress([]);
         return;
     }
@@ -211,27 +231,24 @@ function renderList() {
         if(isChecked) tr.classList.add('completed');
 
         const textColor = getRewardColor(item.rewardType);
-        
-        // B열 아이콘 데이터를 이미지 요소 규격에 맞게 매핑 가공
-        const iconTag = item.icon ? `<img src="${item.icon}" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
+        const proxyIconUrl = item.icon ? `https://weserv.nl{encodeURIComponent(item.icon)}` : '';
+        const iconTag = proxyIconUrl ? `<img src="${proxyIconUrl}" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
-        // 정밀 디자인 뼈대 규격 7열 바인딩 (번호 / 체크박스 / 아이콘 이미지 / 이름 / 패치 / 획득처 / 거래여부)
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
             <td class="col-icon" style="text-align: center; padding: 4px;">${iconTag}</td>
             <td class="col-name">${item.name}</td>
-            <td class="col-cond" style="color: #4ea8de;">${item.patch}</td>
+            <td class="col-cond">${item.patch}</td>
             <td class="col-score">${item.condition || '-'}</td>
             <td class="col-rw-type" style="color: ${textColor}; font-weight: bold;">${item.rewardType || '-'}</td>
         `;
         listBody.appendChild(tr);
     });
-
     calculateChapterProgress(filtered);
 }
 
-// 7. 보유 변경 내역 실시간 저장 및 런타임 수집 차트 업데이트 프로세스
+// 7. 보유 상태 실시간 변경 토글 감지 및 스토리지 동기화 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -258,7 +275,7 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 8. 대시보드 실시간 아이템 보유 카운트 백분율 분석 싱크
+// 8. 상단 통합 대시보드 백분율 진행도 연산 엔진 싱크 프로토콜
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -270,7 +287,6 @@ function calculateTotalProgress() {
     document.getElementById('total-count').textContent = `${checkedCount}/${total}`;
     document.getElementById('total-bar').style.width = `${percent}%`;
 
-    // 인라인 은닉 보정 홀더 데이터 동기화 연산 백업
     document.getElementById('score-total').textContent = checkedCount.toLocaleString();
     document.getElementById('score-max').textContent = total.toLocaleString();
     document.getElementById('score-bar').style.width = `${percent}%`;
@@ -278,7 +294,6 @@ function calculateTotalProgress() {
 
 function calculateChapterProgress(currentItems) {
     const total = currentItems.length;
-    
     if (currentSearchQuery) {
         document.getElementById('chapter-percent').parentElement.firstChild.textContent = "검색 아이템 보유율: ";
     } else if (currentRewardFilter !== 'ALL') {
@@ -301,5 +316,5 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 초기 구동 비동기 트리거 가동
+// 최초 구동 트리거 실행
 fetchData();
