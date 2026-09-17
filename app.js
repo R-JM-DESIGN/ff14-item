@@ -106,7 +106,7 @@ function selectSortOrder(order) {
     if (order === 'ORIGIN_ASC') document.getElementById('sort-origin-asc').classList.add('active');
     if (order === 'ORIGIN_DESC') document.getElementById('sort-origin-desc').classList.add('active');
     
-    // 🌟 [정렬 연동 패치 완료] 획득처 이름순 정렬 클릭 시 획득처 드롭다운을 자동으로 '전체 보기'로 풀어 정렬 범위 유지
+    // 🌟 획득처 이름순 정렬 클릭 시 획득처 드롭다운을 자동으로 '전체 보기'로 풀어 정렬 범위 유지
     if (order === 'ORIGIN_ASC' || order === 'ORIGIN_DESC') {
         currentOriginFilter = 'ALL';
         resetOriginDropdownUI();
@@ -291,7 +291,6 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 
-// 드롭다운 상자의 선택 위치를 첫 번째 'ALL' 옵션 위치로 강제 초기화 이동
 function resetOriginDropdownUI() {
     const dropdown = document.getElementById('condition-dropdown-filter');
     if (dropdown) dropdown.value = 'ALL';
@@ -375,6 +374,7 @@ function renderList() {
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
+        // 🌟 [오타 완벽 해결] 이전 덤프의 'id(item.rewardType)' 치명적인 명칭 탈락 에러를 'isTradeable'로 완벽 보정했습니다.
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
@@ -390,7 +390,7 @@ function renderList() {
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
                 const parts = item.name.split('(');
-                const mainTitle = parts.trim();
+                const mainTitle = parts[0].trim();
                 const subTitle = parts.slice(1).join('(').trim();
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
             }
@@ -441,7 +441,6 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 🌟 [전체 달성도 오리지널 복구 완결] 무너진 레이아웃을 파괴하지 않고 정직하게 숫자 수치 및 게이지바를 전개합니다.
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -454,7 +453,6 @@ function calculateTotalProgress() {
     document.getElementById('total-bar').style.width = `${percent}%`;
 }
 
-// 🌟 [현재 분류 수집율 오리지널 복구 완결] 다중 필터명 변환 라벨 처리 매핑 및 민트색 그래프 연동 기동
 function calculateChapterProgress(currentItems) {
     const total = currentItems.length;
     const titleLabel = document.getElementById('chapter-title-label');
@@ -479,7 +477,7 @@ function calculateChapterProgress(currentItems) {
     const percent = Math.round((checkedCount / total) * 100);
 
     document.getElementById('chapter-percent').textContent = `${percent}%`;
-    document.getElementById('chapter-count').textContent = `(${checkedCount}/${total})`;
+    document.getElementById('chapter-count').textContent = `(0/0)`;
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
