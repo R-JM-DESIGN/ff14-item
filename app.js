@@ -13,10 +13,10 @@ let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
 let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
-let currentSortOrder = 'DESC';         // 패치 및 획득처 통합 정렬 변수 (기본값: 최신순 DESC)
+let currentSortOrder = 'DESC';         // 패치 및 획득처 통합 정렬 변수
 let currentSearchQuery = ''; 
 
-// 1. 원격 구글 시트 7개 컬럼 데이터 세트 초고속 로드 및 정밀 매핑
+// 1. 원격 구글 시트 데이터 비동기 인프라 로드 및 매핑
 async function fetchData() {
     try {
         const res = await fetch(SHEET_URL);
@@ -25,7 +25,6 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 컴퓨터 인덱스 규칙 고정: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -33,7 +32,6 @@ async function fetchData() {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
-            // 이미지 주소 깨짐 원천봉쇄 공식 라인 색출기 가동
             let detectedIconUrl = '';
             for (let cell of row) {
                 const strCell = String(cell).trim();
@@ -49,9 +47,9 @@ async function fetchData() {
 
             return {
                 id: itemName,           
-                main: getVal(0),        // A열: 카테고리 선택
+                main: getVal(0),        // A열: 카테고리
                 sub: '전체 목록',       
-                icon: detectedIconUrl,  // B열: 아이콘 원본 주소
+                icon: detectedIconUrl,  // B열: 아이콘 주소
                 name: itemName,         // C열: 이름
                 patch: getVal(3),        // D열: 패치
                 originPlace: getVal(4),  // E열: 획득처
@@ -64,7 +62,7 @@ async function fetchData() {
 
         initMenu();
         initRewardMenu(); 
-        initOriginDropdown(); // 획득처 드롭다운 옵션 빌더 기동
+        initOriginDropdown(); 
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
@@ -76,14 +74,14 @@ async function fetchData() {
     }
 }
 
-// 2. 검색 인터페이스 키인 핸들러
+// 2. 검색 인터페이스 인풋 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
     currentSearchQuery = inputElement.value.trim().toLowerCase();
     renderList(); 
 }
 
-// 3. 아이템 획득 상태(보유/미보유) 스위칭 컨트롤러
+// 3. 아이템 획득 상태 필터 스위칭
 function selectStatusFilter(status) {
     currentStatusFilter = status;
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -93,10 +91,9 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (다중 정렬 분기 및 스마트 양방향 크로스 리셋 시스템)
+// app.js - Part 2 (검색어 원터치 초기화 트리거 신설 및 지능형 리셋 시스템)
 // =========================================================================
 
-// 사용자가 지정한 정렬 타입에 맞춰 클래스 활성화 불빛을 제어하고 연산을 수행합니다.
 function selectSortOrder(order) {
     currentSortOrder = order;
     document.querySelectorAll('.sort-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -109,7 +106,6 @@ function selectSortOrder(order) {
     renderList();
 }
 
-// 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
 function initMenu() {
     const mains = [...new Set(rawData.map(item => item.main))];
     const mainGroup = document.getElementById('main-category-group');
@@ -160,7 +156,6 @@ function initRewardMenu() {
     });
 }
 
-// E열의 획득처 종류를 중복 없이 추출하여 HTML <select> 박스 안에 옵션 자동 주입
 function initOriginDropdown() {
     const originTypes = [...new Set(rawData.map(item => item.originPlace))].filter(t => t && t !== '-');
     const dropdown = document.getElementById('condition-dropdown-filter');
@@ -185,11 +180,9 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    if (type !== 'ALL') {
-        currentOriginFilter = 'ALL';
-        resetOriginDropdownUI();
+    if (type !== 'ALL' || currentOriginFilter !== 'ALL') {
         clearCommonBaseFilters();
-        document.getElementById('current-path-display').textContent = `⚖️ [필터] 거래 여부 : ${type}`;
+        updatePathDisplay();
     } else {
         restoreDefaultCategory();
     }
@@ -197,40 +190,54 @@ function selectRewardFilter(type, btn) {
 }
 
 function handleOriginDropdownChange(selectElement) {
-    const selectedValue = selectElement.value;
-    currentOriginFilter = selectedValue;
+    currentOriginFilter = selectElement.value;
 
-    if (selectedValue !== 'ALL') {
-        currentRewardFilter = 'ALL';
-        updateRewardFilterActive();
+    if (currentOriginFilter !== 'ALL' || currentRewardFilter !== 'ALL') {
         clearCommonBaseFilters();
-        document.getElementById('current-path-display').textContent = `🗺️ [필터] 획득처 : ${selectedValue}`;
+        updatePathDisplay();
     } else {
         restoreDefaultCategory();
     }
     renderList();
 }
 
-// 원터치 초기화 매커니즘 연동: 초기화 버튼 클릭 시 획득처 필터를 깨끗하게 원격 클리어
 function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
     currentOriginFilter = 'ALL';
     resetOriginDropdownUI();
-    restoreDefaultCategory();
+    
+    if (currentRewardFilter === 'ALL') {
+        restoreDefaultCategory();
+    } else {
+        updatePathDisplay();
+    }
+    renderList();
+}
+
+// 🌟 [신설] 검색창 초기화(Clear) 단추 클릭 시 인풋박스를 원터치로 청소하고 즉시 원복 렌더링
+function clearSearchInputFilter() {
+    if (!currentSearchQuery) return; // 이미 검색어가 비어있다면 가동 생략
+    
+    currentSearchQuery = '';
+    const searchInput = document.getElementById('search-keyword');
+    if (searchInput) searchInput.value = ''; // 검색 인풋 입력칸 텍스트 강제 삭제
+    
+    // 복합 다중 필터가 모두 꺼져 있다면 기본 카테고리로 원복 알림 갱신
+    if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+        const activeMainBtn = document.querySelector('#main-category-group button.active');
+        if (activeMainBtn) currentMain = activeMainBtn.textContent;
+    }
+    
+    updatePathDisplay();
     renderList();
 }
 
 function clearCommonBaseFilters() {
-    currentMain = ''; 
-    document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
-    currentStatusFilter = 'ALL';
-    document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
-    const statusAllBtn = document.getElementById('status-all');
-    if (statusAllBtn) statusAllBtn.classList.add('active');
-    currentSearchQuery = '';
-    const searchInput = document.getElementById('search-keyword');
-    if (searchInput) searchInput.value = '';
+    if (currentRewardFilter !== 'ALL' || currentOriginFilter !== 'ALL') {
+        currentMain = ''; 
+        document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
+    }
 }
 
 function restoreDefaultCategory() {
@@ -238,11 +245,25 @@ function restoreDefaultCategory() {
         const activeMainBtn = document.querySelector('#main-category-group button.active');
         if (activeMainBtn) {
             currentMain = activeMainBtn.textContent;
-            document.getElementById('current-path-display').textContent = `📂 분류 : ${currentMain}`;
         } else {
             const firstMainBtn = document.querySelector('#main-category-group button');
             if (firstMainBtn) firstMainBtn.click();
         }
+        updatePathDisplay();
+    }
+}
+
+function updatePathDisplay() {
+    const display = document.getElementById('current-path-display');
+    if (!display) return;
+
+    if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+        display.textContent = `📂 분류 : ${currentMain || '전체 목록'}`;
+    } else {
+        let texts = [];
+        if (currentRewardFilter !== 'ALL') texts.push(`⚖️ 거래 여부 : ${currentRewardFilter}`);
+        if (currentOriginFilter !== 'ALL') texts.push(`🗺️ 획득처 : ${currentOriginFilter}`);
+        display.textContent = `⛓️ [복합 필터 가동중] ${texts.join(' ➕ ')}`;
     }
 }
 
@@ -257,7 +278,7 @@ function resetOriginDropdownUI() {
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (8개 확장 열 실시간 렌더링 주입 및 대시보드 진행도 싱크)
+// app.js - Part 3 (교집합 연산 정렬 스코프 및 8열 무결성 렌더링)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -278,25 +299,26 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
 
     let filtered = [];
     if (!currentSearchQuery) {
-        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-            filtered = rawData.filter(item => item.main === currentMain);
-        } else if (currentRewardFilter !== 'ALL') {
-            filtered = rawData.filter(item => {
-                if (currentRewardFilter === '거래 가능') return isTradeable(item.rewardType);
-                if (currentRewardFilter === '거래 불가') return isNotTradeable(item.rewardType);
-                return true;
-            });
-        } else if (currentOriginFilter !== 'ALL') {
-            filtered = rawData.filter(item => item.originPlace === currentOriginFilter);
-        }
+        // 복합 누적 다중 교집합 필터링 연산 수행
+        filtered = rawData.filter(item => {
+            if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+                if (item.main !== currentMain) return false;
+            }
+            if (currentRewardFilter !== 'ALL') {
+                if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
+                if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
+            }
+            if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
+            return true;
+        });
     } else {
+        // 통합 검색바 작동 처리
         filtered = rawData.filter(item => {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
@@ -313,17 +335,11 @@ function renderList() {
         filtered = filtered.filter(item => checkedItems[item.id]);  
     }
 
-    // 통합 복합 정렬 분기 수행 (패치 버전 숫자 정렬 또는 획득처 가나다순 정렬)
     filtered.sort((a, b) => {
-        if (currentSortOrder === 'ASC') {
-            return a.patchValue - b.patchValue;
-        } else if (currentSortOrder === 'DESC') {
-            return b.patchValue - a.patchValue;
-        } else if (currentSortOrder === 'ORIGIN_ASC') {
-            return (a.originPlace || '').localeCompare(b.originPlace || '', 'ko');
-        } else if (currentSortOrder === 'ORIGIN_DESC') {
-            return (b.originPlace || '').localeCompare(a.originPlace || '', 'ko');
-        }
+        if (currentSortOrder === 'ASC') return a.patchValue - b.patchValue;
+        if (currentSortOrder === 'DESC') return b.patchValue - a.patchValue;
+        if (currentSortOrder === 'ORIGIN_ASC') return (a.originPlace || '').localeCompare(b.originPlace || '', 'ko');
+        if (currentSortOrder === 'ORIGIN_DESC') return (b.originPlace || '').localeCompare(a.originPlace || '', 'ko');
         return 0;
     });
 
@@ -339,8 +355,6 @@ function renderList() {
         if(isChecked) tr.classList.add('completed');
 
         const textColor = getRewardColor(item.rewardType);
-        
-        // referrerpolicy 출처 정보 봉쇄 차단막 선언 고정 (100% 엑박 원천 차단 우회책)
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
@@ -348,7 +362,6 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 🌟 [두 번째 괄호 정밀 타겟 브레이킹 엔터 알고리즘]
         let displayName = item.name;
         if (item.name && item.name.includes('(')) {
             const bracketCount = (item.name.match(/\(/g) || []).length;
@@ -381,7 +394,6 @@ function renderList() {
     calculateChapterProgress(filtered);
 }
 
-// 보유 상태 변경 감지 세이브 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -395,21 +407,19 @@ function toggleItem(id, checkbox) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedItems));
     calculateTotalProgress();
 
+    let currentViewItems = rawData.filter(item => {
+        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') return item.main === currentMain;
+        if (currentRewardFilter !== 'ALL') {
+            if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
+            if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
+        }
+        if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
+        return true;
+    });
+    
     if (currentStatusFilter !== 'ALL' || currentSearchQuery) {
         renderList();
     } else {
-        let currentViewItems = [];
-        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-            currentViewItems = rawData.filter(item => item.main === currentMain);
-        } else if (currentRewardFilter !== 'ALL') {
-            currentViewItems = rawData.filter(item => {
-                if (currentRewardFilter === '거래 가능') return isTradeable(item.rewardType);
-                if (currentRewardFilter === '거래 불가') return isNotTradeable(item.rewardType);
-                return true;
-            });
-        } else if (currentOriginFilter !== 'ALL') {
-            currentViewItems = rawData.filter(item => item.originPlace === currentOriginFilter);
-        }
         calculateChapterProgress(currentViewItems);
     }
 }
@@ -446,7 +456,7 @@ function calculateChapterProgress(currentItems) {
         document.getElementById('chapter-bar').style.width = `0%`;
         return;
     }
-    const checkedCount = currentItems.filter(item => checkedItems[id]).length;
+    const checkedCount = currentItems.filter(item => checkedItems[item.id]).length;
     const percent = Math.round((checkedCount / total) * 100);
 
     document.getElementById('chapter-percent').textContent = `${percent}%`;
@@ -454,5 +464,4 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 비동기 엔진 최초 구동 트리거 점화 실행
 fetchData();
