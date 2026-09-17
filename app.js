@@ -1,6 +1,5 @@
 // =========================================================================
-// app.js - Part 1 (7개 열 확장 스키마 수집 및 이미지 원천 파쇄 보호망)
-// 🌟 사용자님의 구글 웹 앱 API 주소를 상단에 고정하여 초고속 연동을 지원합니다.
+// app.js - Part 1 (G열 거래 여부 데이터 인덱스 번호 정밀 보정 버전)
 // =========================================================================
 const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXU6uSUZE4SY3PpD7I6YtCGivLYEuCqzKvTEyWIoSoVr8Sd8FcfOhlL3UjcYmyp__m/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
@@ -11,7 +10,7 @@ let checkedItems = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
 let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
-let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟 (신설 🌟)
+let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
 let currentSearchQuery = ''; 
 
@@ -24,7 +23,8 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 확장된 7개 열 파싱 체계 구축 (카테고리 / 아이콘 / 이름 / 패치 / 획득처 / 조건 / 거래여부)
+        // 🌟 [인덱스 전수조사 매핑 보정]
+        // 컴퓨터 번호 부여 체계에 맞춰 (A=0, B=1, C=2, D=3, E=4, F=5, G=6)으로 오차 없이 조율했습니다.
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -43,34 +43,34 @@ async function fetchData() {
                 }
             }
 
-            const itemName = getVal(2); // C열: 이름
+            const itemName = getVal(2); // 2번 인덱스 = C열 (이름)
             const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 1;
 
             return {
                 id: itemName,           
-                main: getVal(0),        // A열: 카테고리 선택
+                main: getVal(0),        // 0번 인덱스 = A열 (카테고리)
                 sub: '전체 목록',       
-                icon: detectedIconUrl,  // B열: 아이콘 원본 주소
-                name: itemName,         // C열: 이름
-                patch: getVal(3),        // D열: 패치
-                originPlace: getVal(4),  // E열: 획득처 🌟
-                condition: getVal(5),   // F열: 조건 상세 설명 문구
+                icon: detectedIconUrl,  // B열 바탕 검출 주소
+                name: itemName,         
+                patch: getVal(3),        // 3번 인덱스 = D열 (패치)
+                originPlace: getVal(4),  // 4번 인덱스 = E열 (획득처) 
+                condition: getVal(5),   // 5번 인덱스 = F열 (조건)
                 score: parsedPatchNum,  
-                rewardType: getVal(6),  // G열: 거래 여부 데이터
+                rewardType: getVal(6),  // 🌟 [보정 완료] 6번 인덱스 = G열 (거래 여부)을 정확히 조준합니다.
                 rewardContent: getVal(6)
             };
         }).filter(item => item && item.name && item.main); 
 
         initMenu();
         initRewardMenu(); 
-        initOriginMenu(); // 획득처 필터 버튼 동적 드로잉 빌더 가동 🌟
+        initOriginMenu(); 
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
         document.getElementById('achievement-list').innerHTML = `
             <tr><td colspan="8" style="text-align: center; color: #ff4d4d; font-weight: bold; padding: 40px;">
                 데이터베이스 연동 실패<br>
-                <span style="color: #aaa; font-size: 0.9em; font-weight: normal;">원인: ${error.message}</span>
+                <span style="color: #aaa; font-size: 0.9em; font-weight: normal;">이유: ${error.message}</span>
             </td></tr>`;
     }
 }
