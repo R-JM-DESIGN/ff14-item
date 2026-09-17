@@ -2,7 +2,7 @@
 // app.js - Part 1 (코어 인프라 및 시트 데이터 검출 매핑 스코프)
 // 🌟 사용자님의 구글 웹 앱 주소를 고정하여 CORS 보안을 우회 연동합니다.
 // =========================================================================
-const GOOGLE_WEB_APP_URL = 'https://google.com';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXU6uSUZE4SY3PpD7I6YtCGivLYEuCqzKvTEyWIoSoVr8Sd8FcfOhlL3UjcYmyp__m/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
