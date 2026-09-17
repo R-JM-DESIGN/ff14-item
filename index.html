@@ -136,105 +136,6 @@
             color: #c5a3ff;
             font-weight: 500;
         }
-
-        /* 통합 박스 내부의 대시보드 수집율 레이아웃 */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .dashboard-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .metric-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .metric-value {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--accent-orange);
-        }
-
-        .progress-container {
-            background-color: #111111;
-            border-radius: 4px;
-            height: 8px;
-            overflow: hidden;
-            width: 100%;
-            border: 1px solid #222;
-        }
-        body.light-mode .progress-container {
-            background-color: #e9ecef;
-            border: none;
-        }
-
-        .progress-bar {
-            background: linear-gradient(90deg, #555555, #888888);
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease-in-out;
-        }
-
-        .count-display {
-            text-align: right;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* 🔍 아이템 통합 검색바 스타일 */
-        .search-section {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .search-label {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #93c5fd;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .search-input-wrapper {
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            background-color: #111111;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 12px 16px;
-            color: #ffffff;
-            font-size: 0.95rem;
-            box-sizing: border-box;
-            transition: border-color 0.2s, background-color 0.3s;
-        }
-        body.light-mode .search-input {
-            background-color: #ffffff;
-            color: #212529;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent-orange);
-        }
     </style>
 </head>
 <body>
@@ -245,7 +146,6 @@
                 <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
             </button>
         </div>
-        
         <!-- 제목 + 이용안내 + 달성도 통합 마스터 박스 -->
         <div class="master-dashboard-box">
             <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
@@ -293,14 +193,26 @@
             </div>
         </div>
 
-        <!-- 🔍 통합 검색 영역 -->
+        <!-- 🔍 통합 검색 영역 (원터치 초기화 버튼 포함 가로 정렬 컴포넌트) -->
+        <style>
+            .search-control-group {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+            }
+        </style>
+        
         <div class="search-section">
             <label class="search-label" for="search-keyword">🔍 아이템 통합 검색</label>
             <div class="search-input-wrapper">
-                <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
+                <div class="search-control-group">
+                    <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
+                    <button id="clear-search-btn" class="clear-action-btn" onclick="clearSearchInputFilter()">초기화</button>
+                </div>
             </div>
         </div>
-        <!-- 추가 스타일 확장 정의 -->
+
+        <!-- 필터 행 제어 전용 인터페이스 스타일 구조 정의 -->
         <style>
             .filter-section {
                 display: flex;
@@ -317,14 +229,13 @@
                 transition: background-color 0.3s;
             }
 
-            /* 🎨 [공간 절반 분할 레이아웃 디자인 프로토콜] */
             .filter-split-row {
                 display: flex;
                 gap: 15px;
                 width: 100%;
             }
             .filter-half-column {
-                flex: 1; /* 정확히 50% 비율로 형제 컬럼과 양분 배치 */
+                flex: 1; 
                 background-color: var(--card-bg);
                 border: 1px solid var(--border-color);
                 border-radius: 8px;
@@ -351,7 +262,6 @@
                 gap: 8px;
             }
 
-            /* 공통 필터 버튼 스타일 프로토콜 */
             .btn-group button {
                 background-color: #222222;
                 border: 1px solid #333333;
@@ -373,31 +283,25 @@
                 background-color: rgba(255, 159, 28, 0.1);
             }
 
-            /* 각 유동적 필터 전용 액티브 색상 분기 맵핑 */
             .btn-group button.active {
-                background-color: #3b82f6; /* 카테고리 블루 활성화 */
+                background-color: #3b82f6; 
                 border-color: #3b82f6;
                 color: #ffffff;
                 font-weight: bold;
             }
             .btn-group button.status-filter-btn.active {
-                background-color: #10b981; /* 획득상태 그린 활성화 */
+                background-color: #10b981; 
                 border-color: #10b981;
             }
             .btn-group button.reward-filter-btn.active {
-                background-color: #ef4444; /* 거래여부 레드 활성화 */
+                background-color: #ef4444; 
                 border-color: #ef4444;
             }
-            .btn-group button.condition-filter-btn.active {
-                background-color: #ff9f1c; /* 획득처 오렌지 활성화 */
-                border-color: #ff9f1c;
-            }
             .btn-group button.sort-filter-btn.active {
-                background-color: #a855f7; /* 다중 정렬 필터용 보라색 매칭 */
+                background-color: #a855f7; 
                 border-color: #a855f7;
             }
 
-            /* 다크 모드 감성의 획득처 필터 드롭다운 가로 정렬 컨테이너 */
             .dropdown-control-group {
                 display: flex;
                 gap: 8px;
@@ -427,7 +331,6 @@
                 border-color: var(--accent-orange);
             }
 
-            /* 드롭다운 전용 독립형 초기화 (Clear) 버튼 전용 핫레드 스타일 */
             .clear-action-btn {
                 background-color: #2a2a2a;
                 border: 1px solid #444444;
@@ -448,25 +351,11 @@
             .clear-action-btn:hover {
                 border-color: #ff6b6b;
                 background-color: rgba(255, 107, 107, 0.1);
-                box-shadow: 0 0 8px rgba(255, 107, 107, 0.2);
-            }
-
-            .path-display-box {
-                background-color: var(--path-bg);
-                border-left: 4px solid var(--accent-orange);
-                padding: 12px 18px;
-                border-radius: 4px;
-                font-weight: 600;
-                font-size: 0.95rem;
-                margin-bottom: 20px;
-                color: var(--path-text);
-                transition: background-color 0.3s, color 0.3s;
             }
         </style>
-
-        <!-- 필터 컨트롤 그룹 -->
+        <!-- 필터 컨트롤 그룹 본체 마크업 -->
         <div class="filter-section">
-            <!-- 1. 보유 상태 필터 + [패치 버전 / 획득처 이름순] 가로 정렬 다중 툴킷 라인 🌟 -->
+            <!-- 1. 보유 상태 필터 + [패치 버전 / 획득처 이름순] 다중 정렬 필터 한 행 결합 배치 -->
             <div class="filter-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div>
                     <div class="filter-title">✔ 아이템 획득 상태 필터</div>
@@ -486,7 +375,7 @@
                             <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
                         </div>
                     </div>
-                    <!-- 획득처 정렬 인터페이스 🌟 -->
+                    <!-- 획득처 정렬 인터페이스 -->
                     <div>
                         <div class="filter-title">🔤 획득처 이름 정렬</div>
                         <div class="btn-group">
@@ -522,7 +411,6 @@
                 <div class="filter-half-column">
                     <div class="filter-title">🗺️ 획득처 필터</div>
                     <div class="dropdown-control-group">
-                        <!-- 옵션 자동 파싱 셀렉트 박스 -->
                         <select id="condition-dropdown-filter" class="filter-dropdown" onchange="handleOriginDropdownChange(this)">
                             <option value="ALL">전체 보기 (필터 해제)</option>
                         </select>
@@ -538,10 +426,9 @@
         </div>
         <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
         <style>
-            /* 🎨 테이블 전체 감싸는 부모 카드 가공 */
             .table-responsive {
                 overflow-x: auto;
-                background-color: var(--card-bg); /* 🌟 고정 어두운 칼라 대신 유동 모드 변수 매핑 */
+                background-color: var(--card-bg); /* 🌟 라이트 모드 전환 시 하얗게 반전 대응 완료 */
                 border: 1px solid var(--border-color); 
                 border-radius: 8px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -555,12 +442,12 @@
                 border-collapse: collapse;
                 text-align: center;
                 font-size: 0.95rem;
-                background-color: var(--card-bg); /* 🌟 테이블 내부 바탕 유동 반전 고정 */
+                background-color: var(--card-bg); 
                 transition: background-color 0.3s;
             }
 
             .item-table th {
-                background-color: var(--table-header); /* 🌟 상단 1행 머리글도 명암 반전 처리 완료 */
+                background-color: var(--table-header); 
                 color: var(--text-muted);
                 padding: 14px 16px;
                 font-weight: 600;
@@ -574,7 +461,7 @@
                 padding: 12px 16px;
                 border-bottom: 1px solid var(--border-color);
                 vertical-align: middle;
-                color: var(--text-main); /* 🌟 라이트 모드 전환 시 어두운 글씨로 명확히 반전 */
+                color: var(--text-main); 
                 transition: color 0.3s, border-color 0.3s;
             }
 
@@ -591,21 +478,20 @@
                 word-break: break-all;     
             }
             
-            /* [패치] 최소폭 고정 원칙 준수 */
             .col-cond { 
                 width: 1%; 
                 white-space: nowrap; 
                 padding-left: 5px; 
                 padding-right: 5px;
                 font-weight: 500; 
-                color: #0077b6; /* 라이트 모드용 파란색 */
+                color: #0077b6; 
             }
             body:not(.light-mode) .col-cond {
-                color: #93c5fd; /* 다크 모드용 스카이블루 */
+                color: #93c5fd; 
             }
             
-            .col-type { width: 14%; font-weight: bold; } /* 획득처 열 */
-            .col-score { width: 36%; color: var(--text-muted); }  /* 조건 열 */
+            .col-type { width: 14%; font-weight: bold; } 
+            .col-score { width: 36%; color: var(--text-muted); }  
             .col-rw-type { width: 10%; }
 
             .item-table input[type="checkbox"] {
@@ -615,7 +501,6 @@
                 accent-color: var(--accent-orange);
             }
 
-            /* 획득 완료 처리 행 상태 연출 */
             .item-table tr.completed {
                 background-color: rgba(0, 0, 0, 0.02);
             }
@@ -652,7 +537,6 @@
                 background-color: rgba(255, 255, 255, 0.01);
             }
 
-            /* 플로팅 TOP 버튼 컴포넌트 */
             .top-scroll-btn {
                 position: fixed;
                 bottom: 30px;
@@ -697,7 +581,6 @@
                         <th>패치</th>
                         <th>획득처</th>
                         <th>조건</th>
-                        <!-- 🌟 '거래 여부' 단어 명칭 싱크 완료 고정 -->
                         <th style="text-align: center;">거래 여부</th>
                     </tr>
                 </thead>
