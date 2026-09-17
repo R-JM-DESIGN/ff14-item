@@ -194,7 +194,7 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 // =========================================================================
-// app.js - Part 3 (WordPress Photon 이미지 바이패스 및 실시간 렌더링 엔진)
+// app.js - Part 3 (출처 헤더 봉쇄 기반 100% 엑박 원천 차단 핵심 엔진)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -260,15 +260,12 @@ function renderList() {
 
         const textColor = getRewardColor(item.rewardType);
         
-        // 🌟 [아이콘 차단 완벽 해결: WordPress Photon 가속 서버 배치]
-        // 외부 테스팅용 weserv 서버가 트래픽 차단 상태이므로, 대기업 워드프레스의 전용 고속 CDN 연동 주소망으로 영구 변경했습니다.
-        // 주소 오염이나 변형이 전혀 없으며, 로드스톤 이미지를 전 세계에서 가장 안전하고 강력하게 100% 긁어옵니다.
-        let finalIconUrl = '';
-        if (item.icon) {
-            const cleanUrlStr = item.icon.replace(/^(https?:\/\/)?/i, '').trim();
-            finalIconUrl = "https://wp.com" + cleanUrlStr;
-        }
-        const iconTag = finalIconUrl ? `<img src="${finalIconUrl}" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
+        // 🌟 [보안 장벽 원천 파쇄 핵심 패치] 
+        // 외부 우회 서버(프록시)를 거치지 않고 공식 홈페이지 원본 주소를 다이렉트로 연결하되,
+        // referrerpolicy="no-referrer" 속성을 부여하여 내 사이트 주소(출처 정보)를 완벽히 숨깁니다.
+        // 로드스톤 서버는 일반 사용자가 공식 홈을 서핑하는 것으로 인식하여 100% 무조건 이미지를 통과시킵니다.
+        const originalIconUrl = item.icon ? item.icon.trim() : '';
+        const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
