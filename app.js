@@ -2,7 +2,7 @@
 // app.js - Part 1 (7개 열 확장 스키마 수집 및 이미지 원천 파쇄 보호망)
 // 🌟 사용자님의 구글 웹 앱 API 주소를 상단에 고정하여 초고속 연동을 지원합니다.
 // =========================================================================
-const GOOGLE_WEB_APP_URL = 'https://google.com';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_Cb18OxVCoIUgdc6p0tZ75nZEXtXBWoS-4Vms5Aly8pq_QIFkB4SzBZzMj0e7av7V/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
