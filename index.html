@@ -76,7 +76,7 @@
             border-color: var(--accent-orange);
         }
 
-        /* 제목, 이용 안내 박스 개별 분리 연출 */
+        /* 제목, 이용 안내, 게이지바를 통합한 싱글 블랙 박스 */
         .master-dashboard-box {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -86,10 +86,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
+        /* 🌟 [1번 사진 피드백 반영 가독성 최적화 패치] */
         .master-title {
             font-size: 1.8rem;
             font-weight: 700;
-            margin: 0 0 15px 0;
+            margin: 0 0 30px 0; /* 기존 15px ➡️ 30px 단단히 벌려서 답답한 느낌을 완벽 삭제했습니다. */
             color: #ffffff;
             display: flex;
             align-items: center;
@@ -138,7 +139,7 @@
                 <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
             </button>
         </div>
-        <!-- 🌟 [게이지바 마스터 박스] 두 번째 스크린샷과 100% 완벽 일치하도록 그리드와 컴포넌트 전면 재조정 고정 -->
+        <!-- 🌟 [게이지바 마스터 박스 부활 유지] 두 번째 스크린샷과 100% 완벽 일치하도록 그리드와 컴포넌트 고정 -->
         <style>
             .dashboard-grid {
                 display: grid;
@@ -176,7 +177,6 @@
             }
             body.light-mode .metric-value { color: #212529; }
 
-            /* 게이지바가 담기는 베이스 트랙 배경 */
             .progress-container {
                 background-color: #2a2a2a;
                 border-radius: 100px;
@@ -189,7 +189,6 @@
                 background-color: #e9ecef;
             }
 
-            /* 실시간으로 늘어나는 100% 무결성 그라데이션 게이지바 막대 */
             .progress-bar {
                 height: 100%;
                 width: 0%;
@@ -197,12 +196,10 @@
                 transition: width 0.4s ease-in-out;
             }
             
-            /* 전체 달성도: 중후한 그레이 그라데이션 */
             #total-bar {
                 background: linear-gradient(90deg, #555555, #888888);
             }
             
-            /* 분류 수집율: 스크린샷과 일치하는 화사한 민트/에메랄드빛 그라데이션 */
             #chapter-bar {
                 background: linear-gradient(90deg, #06b6d4, #10b981);
             }
@@ -218,9 +215,8 @@
             </ul>
         </div>
 
-        <!-- 🌟 두 번째 사진의 완벽한 가로형 대시보드 및 실시간 게이지바 무대 노출 -->
+        <!-- 🌟 가로형 대시보드 및 실시간 연동 텍스트 일체화 구조 원본 보존 고정 -->
         <div class="dashboard-grid">
-            <!-- [왼쪽 박스] 전체 달성도 그래프 -->
             <div class="dashboard-item">
                 <div class="metric-header">
                     <span class="metric-title">전체 달성도: <span id="total-percent" style="color: var(--accent-orange);">0%</span></span>
@@ -231,11 +227,9 @@
                 </div>
             </div>
 
-            <!-- [오른쪽 박스] 분류/필터 수집율 그래프 (민트색 활성화) -->
             <div class="dashboard-item">
                 <div class="metric-header">
-                    <span class="metric-title" id="chapter-title-label">현재 분류 달성도</span>
-                    <span class="metric-title"><span id="chapter-percent" style="color: #10b981;">0%</span></span>
+                    <span class="metric-title"><span id="chapter-title-label">현재 분류 달성도</span>: <span id="chapter-percent" style="color: #10b981;">0%</span></span>
                     <span id="chapter-count" class="metric-value">(0/0)</span>
                 </div>
                 <div class="progress-container">
@@ -244,9 +238,9 @@
             </div>
         </div>
 
-        <!-- 가상 홀더 데이터 (연산 무결성 보존 유지) -->
         <div style="display:none;"><span id="score-total">0</span><span id="score-max">0</span><div id="score-bar"></div></div>
-        <!-- 🔍 통합 검색 영역 (이전 고유 스타일 패딩 유지 + 가로폭 밀착 동기화) -->
+
+        <!-- 🔍 통합 검색 영역 (이전 고유 패딩 크기 + 가로 너비 100% 밀착 동기화) -->
         <style>
             .search-section {
                 background-color: var(--card-bg);
@@ -295,7 +289,6 @@
                 </div>
             </div>
         </div>
-
         <!-- 필터 행 제어 전용 인터페이스 스타일 구조 정의 -->
         <style>
             .filter-section {
@@ -435,6 +428,19 @@
             .clear-action-btn:hover {
                 border-color: #ff6b6b;
                 background-color: rgba(255, 107, 107, 0.1);
+            }
+
+            /* 🌟 [2번 사진 피드백 반영 여백 균형 보정 패치 완료] */
+            .path-display-box {
+                background-color: var(--path-bg);
+                border-left: 4px solid var(--accent-orange);
+                padding: 12px 18px;
+                border-radius: 4px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                margin-bottom: 35px; /* 기존 20px ➡️ 35px 확장하여 하단 메인 표 테이블과 숨통 트이는 정간격을 구현했습니다. */
+                color: var(--path-text);
+                transition: background-color 0.3s, color 0.3s;
             }
         </style>
 
