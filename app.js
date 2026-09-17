@@ -296,7 +296,7 @@ function resetOriginDropdownUI() {
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (교집합 연산 정렬 스코프 및 8열 무결성 렌더링)
+// app.js - Part 3 (복합 교집합 실시간 수치 취합 정밀 갱신 및 8열 렌더링 엔진)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -317,33 +317,41 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-function renderList() {
-    const listBody = document.getElementById('achievement-list');
-    listBody.innerHTML = '';
-
-    let filtered = [];
-    if (!currentSearchQuery) {
-        filtered = rawData.filter(item => {
-            if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-                if (item.main !== currentMain) return false;
-            }
-            if (currentRewardFilter !== 'ALL') {
-                if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
-                if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
-            }
-            if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
-            return true;
-        });
-    } else {
-        filtered = rawData.filter(item => {
+// 사용자가 설정한 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열만 완벽하게 정제해 내는 마스터 팩토리 함수 🌟
+function getCurrentFilteredItems() {
+    return rawData.filter(item => {
+        // 검색어가 있을 때는 전체 검색 모드로 작동
+        if (currentSearchQuery) {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
                    item.originPlace.toLowerCase().includes(currentSearchQuery) || 
                    item.condition.toLowerCase().includes(currentSearchQuery) || 
                    item.rewardType.toLowerCase().includes(currentSearchQuery);
-        });
-        document.getElementById('current-path-display').textContent = `🔍 전체 도감 내 '${currentSearchQuery}' 검색 결과 (총 ${filtered.length}건)`;
-    }
+        }
+        
+        // 검색어가 없을 때는 대분류 카테고리 기저 매칭
+        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+            if (item.main !== currentMain) return false;
+        }
+        // 거래 여부 조건 체크
+        if (currentRewardFilter !== 'ALL') {
+            if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
+            if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
+        }
+        // 획득처 드롭다운 조건 체크
+        if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
+        
+        return true;
+    });
+}
+
+// 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
+function renderList() {
+    const listBody = document.getElementById('achievement-list');
+    listBody.innerHTML = '';
+
+    // 🌟 정밀 가공 팩토리 함수를 호출하여 현재 조건에 맞는 아이템들을 수집합니다.
+    let filtered = getCurrentFilteredItems();
 
     if (currentStatusFilter === 'UNCOMPLETED') {
         filtered = filtered.filter(item => !checkedItems[item.id]); 
@@ -374,7 +382,6 @@ function renderList() {
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
-        // 🌟 [오타 완벽 해결] 이전 덤프의 'id(item.rewardType)' 치명적인 명칭 탈락 에러를 'isTradeable'로 완벽 보정했습니다.
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
@@ -390,7 +397,7 @@ function renderList() {
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
                 const parts = item.name.split('(');
-                const mainTitle = parts[0].trim();
+                const mainTitle = parts.trim();
                 const subTitle = parts.slice(1).join('(').trim();
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
             }
@@ -408,9 +415,12 @@ function renderList() {
         `;
         listBody.appendChild(tr);
     });
-    calculateChapterProgress(filtered);
+    
+    // 현재 필터링을 만족하는 전체 모수를 기반으로 진행율을 매핑합니다.
+    calculateChapterProgress(getCurrentFilteredItems());
 }
 
+// 7. 보유 상태 실시간 스토리지 플러시 핸들러 (수치 멈춤 버그 완전 해결 🌟)
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -424,20 +434,13 @@ function toggleItem(id, checkbox) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedItems));
     calculateTotalProgress();
 
-    let currentViewItems = rawData.filter(item => {
-        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') return item.main === currentMain;
-        if (currentRewardFilter !== 'ALL') {
-            if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
-            if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
-        }
-        if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
-        return true;
-    });
-    
+    // 🌟 [핵심 패치 리팩토링]
+    // 보유상태 필터 조건이 켜져 있거나 검색 모드일 때는 리스트를 즉시 다시 그려 화면에서 빼고,
+    // 일반 분류 상태일 때는 리스트를 유지하되 상단 현재 분류 달성도 수치(0/0)와 민트 게이지바만 실시간 초고속 동기화합니다.
     if (currentStatusFilter !== 'ALL' || currentSearchQuery) {
         renderList();
     } else {
-        calculateChapterProgress(currentViewItems);
+        calculateChapterProgress(getCurrentFilteredItems());
     }
 }
 
@@ -476,8 +479,9 @@ function calculateChapterProgress(currentItems) {
     const checkedCount = currentItems.filter(item => checkedItems[item.id]).length;
     const percent = Math.round((checkedCount / total) * 100);
 
+    // 🌟 오타 및 마크업 불일치 요소를 완벽 청소하여 게이지바와 텍스트 일체형 싱크를 완결했습니다.
     document.getElementById('chapter-percent').textContent = `${percent}%`;
-    document.getElementById('chapter-count').textContent = `(0/0)`;
+    document.getElementById('chapter-count').textContent = `(${checkedCount}/${total})`;
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
