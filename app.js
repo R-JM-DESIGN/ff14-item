@@ -25,7 +25,6 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 컴퓨터 인덱스 규칙 고정: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -33,7 +32,6 @@ async function fetchData() {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
-            // 이미지 주소 깨짐 원천봉쇄 자동 색출기 가동
             let detectedIconUrl = '';
             for (let cell of row) {
                 const strCell = String(cell).trim();
@@ -76,14 +74,12 @@ async function fetchData() {
     }
 }
 
-// 2. 검색 인터페이스 키인 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
     currentSearchQuery = inputElement.value.trim().toLowerCase();
     renderList(); 
 }
 
-// 3. 아이템 획득 상태(보유/미보유) 스위칭 컨트롤러
 function selectStatusFilter(status) {
     currentStatusFilter = status;
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -204,7 +200,6 @@ function handleOriginDropdownChange(selectElement) {
     renderList();
 }
 
-// 원터치 초기화 매커니즘 연동: 초기화 버튼 클릭 시 획득처 필터를 깨끗하게 원격 클리어
 function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
@@ -245,7 +240,6 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 
-// 드롭다운 상자의 선택 위치를 첫 번째 'ALL' 옵션 위치로 강제 초기화 이동
 function resetOriginDropdownUI() {
     const dropdown = document.getElementById('condition-dropdown-filter');
     if (dropdown) dropdown.value = 'ALL';
@@ -272,7 +266,6 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -288,7 +281,6 @@ function renderList() {
                 return true;
             });
         } else if (currentOriginFilter !== 'ALL') {
-            // 드롭다운에서 선택한 획득처 종류가 일치하는 대상만 선별
             filtered = rawData.filter(item => item.originPlace === currentOriginFilter);
         }
     } else {
@@ -308,7 +300,6 @@ function renderList() {
         filtered = filtered.filter(item => checkedItems[item.id]);  
     }
 
-    // 패치 숫자 크기 조건부 비교 정렬 (오름차순/내림차순)
     filtered.sort((a, b) => {
         if (currentSortOrder === 'ASC') return a.patchValue - b.patchValue;
         return b.patchValue - a.patchValue;
@@ -327,7 +318,6 @@ function renderList() {
 
         const textColor = getRewardColor(item.rewardType);
         
-        // referrerpolicy 출처 차단막 속성 부여 고정 (100% 엑박 해결책 유지)
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
@@ -335,12 +325,23 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 번호, 보유, 아이콘, 이름, 패치, 획득처, 조건, 거래여부 총 8열 마크업 완벽 매핑 주입
+        // 🌟 [괄호 앞 강제 엔터 분리 알고리즘 탑재]
+        // 텍스트 매칭 결함을 방지하기 위해 정밀 가공 처리 후 HTML에 주입합니다.
+        let displayName = item.name;
+        if (item.name && item.name.includes('(')) {
+            const parts = item.name.split('(');
+            const mainTitle = parts[0].trim(); // 괄호 앞의 주 이름
+            const subTitle = parts.slice(1).join('(').trim(); // 괄호 뒤의 서브 이름
+            
+            // 괄호 앞 지점에서 강제로 줄바꿈(<br>)을 수행하고 디자인용 스팬 태그를 두릅니다.
+            displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
+        }
+
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
             <td class="col-icon" style="text-align: center; padding: 4px;">${iconTag}</td>
-            <td class="col-name">${item.name}</td>
+            <td class="col-name">${displayName}</td>
             <td class="col-cond">${item.patch}</td>
             <td class="col-type" style="color: #ff9f1c; font-weight: bold;">${item.originPlace || '-'}</td>
             <td class="col-score">${item.condition || '-'}</td>
@@ -351,7 +352,6 @@ function renderList() {
     calculateChapterProgress(filtered);
 }
 
-// 보유 상태 실시간 변경 토글 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -384,7 +384,6 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 대시보드 백분율 진행도 연산 엔진 싱크
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -425,5 +424,4 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 비동기 엔진 가동 점화
 fetchData();
