@@ -93,10 +93,10 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (획득처 정렬 시 획득처 필터 자동 해제 및 스마트 리셋 시스템)
+// app.js - Part 2 (정렬 명령 스위치 핸들러 및 양방향 크로스 리셋 시스템)
 // =========================================================================
 
-// 정렬 명령 스위치 핸들러
+// 사용자가 지정한 정렬 타입에 맞춰 클래스 활성화 불빛을 제어하고 연산을 수행합니다.
 function selectSortOrder(order) {
     currentSortOrder = order;
     document.querySelectorAll('.sort-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -106,7 +106,7 @@ function selectSortOrder(order) {
     if (order === 'ORIGIN_ASC') document.getElementById('sort-origin-asc').classList.add('active');
     if (order === 'ORIGIN_DESC') document.getElementById('sort-origin-desc').classList.add('active');
     
-    // 🌟 획득처 이름순 정렬 클릭 시 획득처 드롭다운을 자동으로 '전체 보기'로 풀어 정렬 범위 유지
+    // 획득처 이름순 정렬 클릭 시 획득처 드롭다운을 자동으로 '전체 보기'로 풀어 정렬 범위 유지
     if (order === 'ORIGIN_ASC' || order === 'ORIGIN_DESC') {
         currentOriginFilter = 'ALL';
         resetOriginDropdownUI();
@@ -126,8 +126,9 @@ function selectSortOrder(order) {
     renderList();
 }
 
+// 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
 function initMenu() {
-    const mains = [...new Set(rawData.map(item => item.main))];
+    const mains = [...new Set(rawData.map(item => item.main))].filter(Boolean);
     const mainGroup = document.getElementById('main-category-group');
     mainGroup.innerHTML = '';
 
@@ -136,8 +137,13 @@ function initMenu() {
         const btn = document.createElement('button');
         btn.textContent = main;
         btn.onclick = () => selectMainCategory(main, btn);
-        if(idx === 0) btn.click(); 
         mainGroup.appendChild(btn);
+        
+        // 🌟 [순서 버그 격파 1단계] 첫 번째 대분류 단추를 변수 상에 강제 사전 세팅 고정합니다.
+        if (idx === 0) {
+            currentMain = main;
+            btn.classList.add('active');
+        }
     });
 }
 
@@ -317,35 +323,35 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-function renderList() {
-    const listBody = document.getElementById('achievement-list');
-    listBody.innerHTML = '';
-
-    let filtered = [];
-    if (!currentSearchQuery) {
-        // 복합 누적 다중 교집합 필터링 연산 수행
-        filtered = rawData.filter(item => {
-            if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-                if (item.main !== currentMain) return false;
-            }
-            if (currentRewardFilter !== 'ALL') {
-                if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
-                if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
-            }
-            if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
-            return true;
-        });
-    } else {
-        // 통합 검색바 작동 처리
-        filtered = rawData.filter(item => {
+// 사용자가 설정한 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열만 완벽하게 정제해 내는 마스터 팩토리 함수
+function getCurrentFilteredItems() {
+    return rawData.filter(item => {
+        if (currentSearchQuery) {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
                    item.originPlace.toLowerCase().includes(currentSearchQuery) || 
                    item.condition.toLowerCase().includes(currentSearchQuery) || 
                    item.rewardType.toLowerCase().includes(currentSearchQuery);
-        });
-        document.getElementById('current-path-display').textContent = `🔍 전체 도감 내 '${currentSearchQuery}' 검색 결과 (총 ${filtered.length}건)`;
-    }
+        }
+        
+        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+            if (item.main !== currentMain) return false;
+        }
+        if (currentRewardFilter !== 'ALL') {
+            if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
+            if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
+        }
+        if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
+        
+        return true;
+    });
+}
+
+function renderList() {
+    const listBody = document.getElementById('achievement-list');
+    listBody.innerHTML = '';
+
+    let filtered = getCurrentFilteredItems();
 
     if (currentStatusFilter === 'UNCOMPLETED') {
         filtered = filtered.filter(item => !checkedItems[item.id]); 
@@ -380,8 +386,6 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 🌟 [문법 오류 완전 청소 마감 부문]
-        // parts[0].trim() 과 같이 배열의 방 번호를 명확히 지정해 주어 문자열로 변환한 뒤 공백 제거를 수행하도록 버그를 격파했습니다.
         let displayName = item.name;
         if (item.name && item.name.includes('(')) {
             const bracketCount = (item.name.match(/\(/g) || []).length;
@@ -393,7 +397,7 @@ function renderList() {
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
                 const parts = item.name.split('(');
-                const mainTitle = parts[0] ? parts[0].trim() : ''; // 🌟 배열 위치 지정 및 오타 수정 완료
+                const mainTitle = parts[0] ? parts[0].trim() : ''; 
                 const subTitle = parts.slice(1).join('(').trim();
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
             }
@@ -411,7 +415,8 @@ function renderList() {
         `;
         listBody.appendChild(tr);
     });
-    calculateChapterProgress(filtered);
+    
+    calculateChapterProgress(getCurrentFilteredItems());
 }
 
 function toggleItem(id, checkbox) {
@@ -427,20 +432,10 @@ function toggleItem(id, checkbox) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedItems));
     calculateTotalProgress();
 
-    let currentViewItems = rawData.filter(item => {
-        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') return item.main === currentMain;
-        if (currentRewardFilter !== 'ALL') {
-            if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
-            if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
-        }
-        if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
-        return true;
-    });
-    
     if (currentStatusFilter !== 'ALL' || currentSearchQuery) {
         renderList();
     } else {
-        calculateChapterProgress(currentViewItems);
+        calculateChapterProgress(getCurrentFilteredItems());
     }
 }
 
@@ -470,18 +465,30 @@ function calculateChapterProgress(currentItems) {
         }
     }
 
-    if(total === 0) {
+    // 🌟 [순서 버그 격파 2단계 완결]
+    // 비동기 첫 로딩 시점에는 리스트가 아직 다 그려지기 전이므로, rawData 기반으로 현재 활성화된 카테고리의 갯수를 강제 실시간 추적 추산하여 0개 고정 현상을 원천 방쇄합니다.
+    let exactTotal = total;
+    if (exactTotal === 0 && currentMain && !currentSearchQuery && currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
+        exactTotal = rawData.filter(item => item.main === currentMain).length;
+    }
+
+    if(exactTotal === 0) {
         document.getElementById('chapter-percent').textContent = `0%`;
         document.getElementById('chapter-count').textContent = `(0/0)`;
         document.getElementById('chapter-bar').style.width = `0%`;
         return;
     }
+    
     const checkedCount = currentItems.filter(item => checkedItems[item.id]).length;
-    const percent = Math.round((checkedCount / total) * 100);
+    const percent = Math.round((checkedCount / exactTotal) * 100);
 
     document.getElementById('chapter-percent').textContent = `${percent}%`;
-    document.getElementById('chapter-count').textContent = `(0/0)`;
+    document.getElementById('chapter-count').textContent = `(${checkedCount}/${exactTotal})`;
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-fetchData();
+// 🌟 [순서 버그 격파 3단계] 원본을 안정적으로 순차 기동시킵니다.
+fetchData().then(() => {
+    updatePathDisplay();
+    renderList();
+});
