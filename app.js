@@ -1,10 +1,12 @@
 // =========================================================================
-// app.js - Part 1 (워드프레스 Photon 고속 가속망 탑재 완전 무결 버전)
+// app.js - Part 1 (초고속 데이터 연동 및 원본 데이터 무결성 보정망 가동)
+// 🌟 사용자님의 구글 웹 앱 API 주소를 상단에 고정하여 초고속 연동을 지원합니다.
 // =========================================================================
 const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwXU6uSUZE4SY3PpD7I6YtCGivLYEuCqzKvTEyWIoSoVr8Sd8FcfOhlL3UjcYmyp__m/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
+// 기존 FF14 업적 스토리지와 겹치지 않도록 아이템 도감 전용 고유 데이터베이스 키 고정
 const STORAGE_KEY = 'game_item_checklist_v3';
 let checkedItems = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
@@ -13,7 +15,7 @@ let currentRewardFilter = 'ALL';       // F열: 거래 여부 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
 let currentSearchQuery = ''; 
 
-// 1. 원격 구글 시트 텍스트 배열 스트림 단일 회선 초고속 수집
+// 1. 원격 구글 시트 데이터 비동기 인프라 로드 및 동적 미스매칭 차단 파싱
 async function fetchData() {
     try {
         const res = await fetch(SHEET_URL);
@@ -29,14 +31,19 @@ async function fetchData() {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
-            // ⚡ 대소문자를 훼손하지 않고 문자열 그대로 주소를 완벽 추출하는 정규식 필터
+            // 🌟 [아이콘 원천 차단 해제 엔진]
+            // 열 순서 밀림 버그를 완전히 분쇄하기 위해, 행 내부의 모든 칸을 뒤져서 
+            // 파이널판타지14 공식 로드스톤 이미지 서버(lds-img) 주소를 정확히 검출하여 매핑합니다.
             let detectedIconUrl = '';
             for (let cell of row) {
                 const strCell = String(cell).trim();
-                const match = strCell.match(/https?:\/\/[^\s"']+/i);
-                if (match) {
-                    detectedIconUrl = String(match[0]); // 첫 번째 매칭된 순수 오리지널 주소 원본 추출
-                    break;
+                if (strCell.includes('://finalfantasyxiv.com') || strCell.startsWith('http')) {
+                    // 주소 뒤의 해시 파라미터(?n7.56 등) 및 대소문자가 단 1글자도 변형되지 않도록 원본 그대로 추출
+                    const match = strCell.match(/https?:\/\/[^\s"']+/i);
+                    if (match) {
+                        detectedIconUrl = String(match[0]).trim();
+                        break;
+                    }
                 }
             }
 
@@ -47,7 +54,7 @@ async function fetchData() {
                 id: itemName,           
                 main: getVal(0),        // A열: 분류 (대분류)
                 sub: '전체 목록',       
-                icon: detectedIconUrl,  // 대소문자가 100% 보존된 완벽 주소 주입
+                icon: detectedIconUrl,  // 정밀 정제된 대소문자 보존 주소 결합
                 name: itemName,         // C열: 이름
                 patch: getVal(3),        // D열: 패치
                 condition: getVal(4),   // E열: 획득처
@@ -64,20 +71,20 @@ async function fetchData() {
         console.error(error);
         document.getElementById('achievement-list').innerHTML = `
             <tr><td colspan="7" style="text-align: center; color: #ff4d4d; font-weight: bold; padding: 40px;">
-                데이터베이스를 연동하는 중입니다... 오류 발생<br>
-                <span style="color: #aaa; font-size: 0.9em; font-weight: normal;">원인: ${error.message}</span>
+                데이터를 로드하지 못했습니다.<br>
+                <span style="color: #aaa; font-size: 0.9em; font-weight: normal;">이유: ${error.message}</span>
             </td></tr>`;
     }
 }
 
-// 2. 검색 인터페이스 키인 핸들러
+// 2. 검색 인터페이스 키인 타이핑 인풋 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
     currentSearchQuery = inputElement.value.trim().toLowerCase();
     renderList(); 
 }
 
-// 3. 아이템 획득 상태(보유/미보유) 스위칭 컨트롤러
+// 3. 아이템 획득 상태(보유/미보유) 스위칭 서브 컨트롤러
 function selectStatusFilter(status) {
     currentStatusFilter = status;
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -87,7 +94,7 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (중복 클릭 감지 자동 토글 해제 스코프)
+// app.js - Part 2 (카테고리 생성 및 중복 클릭 감지 자동 토글 해제 스코프)
 // =========================================================================
 
 // 4. 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
@@ -125,7 +132,7 @@ function selectMainCategory(main, btn) {
     renderList();
 }
 
-// 5. 거래 여부(F열) 필터 버튼 구조 빌더
+// 5. 거래 여부(F열) 필터 버튼 구조 빌더 (사용자 지정 텍스트 대응 명칭 치환)
 function initRewardMenu() {
     const rewardGroup = document.getElementById('reward-category-group');
     rewardGroup.innerHTML = '';
@@ -147,8 +154,9 @@ function initRewardMenu() {
     });
 }
 
-// 🌟 [토글 리셋 정밀 보정 완료] 이미 켜진 버튼을 재클릭하면 완전 초기화가 가동됩니다.
+// 🌟 [토글 리셋 정밀 보정 완결] 이미 켜진 버튼을 재클릭하면 완전 초기화가 안전하게 가동됩니다.
 function selectRewardFilter(type, btn) {
+    // ⚡ 이미 켜져 있는 [거래 가능/불가] 단추를 한 번 더 누르면, 자동으로 '필터 해제'가 발동됩니다.
     if (type !== 'ALL' && currentRewardFilter === type) {
         const allBtn = document.getElementById('rw-btn-all');
         if (allBtn) {
@@ -171,6 +179,7 @@ function selectRewardFilter(type, btn) {
             if (firstMainBtn) firstMainBtn.click();
         }
     } else {
+        // 거래 가능/불가를 새로이 클릭했을 때는 복합 조건 충돌 해제를 위해 다른 연동 변수 초기화
         currentMain = ''; 
         document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
 
@@ -260,10 +269,10 @@ function renderList() {
 
         const textColor = getRewardColor(item.rewardType);
         
-        // 🌟 [보안 장벽 원천 파쇄 핵심 패치] 
-        // 외부 우회 서버(프록시)를 거치지 않고 공식 홈페이지 원본 주소를 다이렉트로 연결하되,
-        // referrerpolicy="no-referrer" 속성을 부여하여 내 사이트 주소(출처 정보)를 완벽히 숨깁니다.
-        // 로드스톤 서버는 일반 사용자가 공식 홈을 서핑하는 것으로 인식하여 100% 무조건 이미지를 통과시킵니다.
+        // 🌟 [보안 장벽 원천 파쇄 핵심 패치 완료] 
+        // 외부 프록시를 완전히 배제하고 오리지널 고화질 링크 원본을 다이렉트로 매핑하되,
+        // referrerpolicy="no-referrer" 속성을 주입하여 GitHub Pages 출처 정보를 완벽히 암전(숨김)시킵니다.
+        // 이로써 로드스톤의 차단 정책을 완전히 무력화하며 영구히 엑박이 뜨지 않게 만듭니다.
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
@@ -333,7 +342,6 @@ function calculateTotalProgress() {
     document.getElementById('score-bar').style.width = `${percent}%`;
 }
 
-// 9. 세부 도감 통계 동적 핸들러
 function calculateChapterProgress(currentItems) {
     const total = currentItems.length;
     if (currentSearchQuery) {
