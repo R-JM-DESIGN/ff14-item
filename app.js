@@ -1,7 +1,7 @@
 // =========================================================================
 // app.js - Part 1 (초고속 연동망 복구 및 데이터 무결성 보호 패치 버전)
 // =========================================================================
-const GOOGLE_WEB_APP_URL = 'https://google.com';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzb9Fme3-R6FL-twHsbKrBQg4uMHgaiQlU57RPBsi5PW1GEPuwrZnRtyc4B5jZYHeJ/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
