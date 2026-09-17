@@ -11,8 +11,9 @@ let checkedItems = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
 let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
-let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟 (신설 🌟)
+let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
+let currentSortOrder = 'DESC';         // 패치 정렬 기준 (기본값: 최신순)
 let currentSearchQuery = ''; 
 
 // 1. 원격 구글 시트 7개 컬럼 데이터 세트 초고속 로드 및 정밀 매핑
@@ -24,7 +25,7 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
-        // 🌟 컴퓨터 인덱스 규칙 정밀 동기화 완료: A=0, B=1, C=2, D=3, E=4, F=5, G=6
+        // 컴퓨터 인덱스 규칙 고정: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -44,7 +45,7 @@ async function fetchData() {
             }
 
             const itemName = getVal(2); // C열: 이름
-            const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 1;
+            const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 0.0;
 
             return {
                 id: itemName,           
@@ -53,17 +54,17 @@ async function fetchData() {
                 icon: detectedIconUrl,  // B열: 아이콘 원본 주소
                 name: itemName,         // C열: 이름
                 patch: getVal(3),        // D열: 패치
-                originPlace: getVal(4),  // E열: 획득처 🌟
+                originPlace: getVal(4),  // E열: 획득처
                 condition: getVal(5),   // F열: 조건 상세 설명 문구
-                score: parsedPatchNum,  
-                rewardType: getVal(6),  // 🌟 G열: 거래 여부 데이터 정밀 조준 완료
+                patchValue: parsedPatchNum, 
+                rewardType: getVal(6),  // G열: 거래 여부 데이터
                 rewardContent: getVal(6)
             };
         }).filter(item => item && item.name && item.main); 
 
         initMenu();
         initRewardMenu(); 
-        initOriginMenu(); // 획득처 필터 버튼 동적 드로잉 빌더 가동 🌟
+        initOriginDropdown(); // 획득처 드롭다운 옵션 빌더 기동
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
@@ -92,10 +93,17 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (양방향 크로스 리셋 및 중복 클릭 감지 자동 토글 해제 스코프)
+// app.js - Part 2 (초기화 기능 추가 및 스마트 양방향 크로스 리셋 시스템)
 // =========================================================================
 
-// 4. 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
+function selectSortOrder(order) {
+    currentSortOrder = order;
+    document.querySelectorAll('.sort-filter-btn').forEach(btn => btn.classList.remove('active'));
+    if (order === 'ASC') document.getElementById('sort-asc').classList.add('active');
+    if (order === 'DESC') document.getElementById('sort-desc').classList.add('active');
+    renderList();
+}
+
 function initMenu() {
     const mains = [...new Set(rawData.map(item => item.main))];
     const mainGroup = document.getElementById('main-category-group');
@@ -113,11 +121,10 @@ function initMenu() {
 
 function selectMainCategory(main, btn) {
     currentMain = main;
-    // 카테고리 전환 시 하위 다중 수집 필터들은 일괄 해제
     currentRewardFilter = 'ALL'; 
     currentOriginFilter = 'ALL';
     updateRewardFilterActive();
-    updateOriginFilterActive();
+    resetOriginDropdownUI(); 
 
     document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -126,7 +133,6 @@ function selectMainCategory(main, btn) {
     renderList();
 }
 
-// 5-1. 거래 여부 필터 구조 빌더
 function initRewardMenu() {
     const rewardGroup = document.getElementById('reward-category-group');
     rewardGroup.innerHTML = '';
@@ -148,29 +154,20 @@ function initRewardMenu() {
     });
 }
 
-// 5-2. 🌟 [신설] E열에 적힌 획득처 종류를 추출하여 동적 버튼 자동 드로잉
-function initOriginMenu() {
+function initOriginDropdown() {
     const originTypes = [...new Set(rawData.map(item => item.originPlace))].filter(t => t && t !== '-');
-    const originGroup = document.getElementById('condition-category-group'); // HTML 타겟 노드 바인딩
-    originGroup.innerHTML = '';
-
-    const allBtn = document.createElement('button');
-    allBtn.textContent = '필터 해제';
-    allBtn.classList.add('condition-filter-btn', 'active');
-    allBtn.id = 'og-btn-all';
-    allBtn.onclick = () => selectOriginFilter('ALL', allBtn);
-    originGroup.appendChild(allBtn);
-
+    const dropdown = document.getElementById('condition-dropdown-filter');
+    
+    dropdown.innerHTML = '<option value="ALL">전체 보기 (필터 해제)</option>';
+    
     originTypes.forEach(type => {
-        const btn = document.createElement('button');
-        btn.textContent = type;
-        btn.classList.add('condition-filter-btn');
-        btn.onclick = () => selectOriginFilter(type, btn);
-        originGroup.appendChild(btn);
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        dropdown.appendChild(option);
     });
 }
 
-// ⚖️ 거래 여부 제어 및 중복 연쇄 토글 리셋 프로토콜
 function selectRewardFilter(type, btn) {
     if (type !== 'ALL' && currentRewardFilter === type) {
         const allBtn = document.getElementById('rw-btn-all');
@@ -181,10 +178,9 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // ⚡ 중요: 거래 여부 필터 단독 기동 시 반대편 획득처 필터는 서로 엉키지 않도록 자동 해제
     if (type !== 'ALL') {
         currentOriginFilter = 'ALL';
-        updateOriginFilterActive();
+        resetOriginDropdownUI();
         clearCommonBaseFilters();
         document.getElementById('current-path-display').textContent = `⚖️ [필터] 거래 여부 : ${type}`;
     } else {
@@ -193,30 +189,31 @@ function selectRewardFilter(type, btn) {
     renderList(); 
 }
 
-// 🌟 [신설] 획득처 제어 및 중복 연쇄 토글 리셋 프로토콜 (양방향 크로스 스마트 리셋 탑재)
-function selectOriginFilter(type, btn) {
-    if (type !== 'ALL' && currentOriginFilter === type) {
-        const allBtn = document.getElementById('og-btn-all');
-        if (allBtn) { selectOriginFilter('ALL', allBtn); return; }
-    }
+function handleOriginDropdownChange(selectElement) {
+    const selectedValue = selectElement.value;
+    currentOriginFilter = selectedValue;
 
-    currentOriginFilter = type;
-    document.querySelectorAll('.condition-filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    // ⚡ 중요: 획득처 필터 단독 기동 시 반대편 거래 여부 필터는 서로 엉키지 않도록 자동 해제
-    if (type !== 'ALL') {
+    if (selectedValue !== 'ALL') {
         currentRewardFilter = 'ALL';
         updateRewardFilterActive();
         clearCommonBaseFilters();
-        document.getElementById('current-path-display').textContent = `🗺️ [필터] 획득처 : ${type}`;
+        document.getElementById('current-path-display').textContent = `🗺️ [필터] 획득처 : ${selectedValue}`;
     } else {
         restoreDefaultCategory();
     }
     renderList();
 }
 
-// 하이브리드 필터 단독 구동 시 기저 조건부 락 전면 파쇄 매크로
+// 🌟 [원터치 초기화 매커니즘 연동] 초기화 버튼 클릭 시 획득처 필터를 깨끗하게 원격 클리어
+function clearOriginDropdownFilter() {
+    if (currentOriginFilter === 'ALL') return;
+    
+    currentOriginFilter = 'ALL';
+    resetOriginDropdownUI();
+    restoreDefaultCategory();
+    renderList();
+}
+
 function clearCommonBaseFilters() {
     currentMain = ''; 
     document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
@@ -248,10 +245,9 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 
-function updateOriginFilterActive() {
-    document.querySelectorAll('.condition-filter-btn').forEach(b => b.classList.remove('active'));
-    const allBtn = document.getElementById('og-btn-all');
-    if(allBtn) allBtn.classList.add('active');
+function resetOriginDropdownUI() {
+    const dropdown = document.getElementById('condition-dropdown-filter');
+    if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
 // app.js - Part 3 (8개 확장 열 실시간 렌더링 주입 및 대시보드 진행도 싱크)
@@ -275,7 +271,6 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -291,7 +286,6 @@ function renderList() {
                 return true;
             });
         } else if (currentOriginFilter !== 'ALL') {
-            // 🌟 획득처 종류 동적 추출 연산 타겟 선별
             filtered = rawData.filter(item => item.originPlace === currentOriginFilter);
         }
     } else {
@@ -311,6 +305,11 @@ function renderList() {
         filtered = filtered.filter(item => checkedItems[item.id]);  
     }
 
+    filtered.sort((a, b) => {
+        if (currentSortOrder === 'ASC') return a.patchValue - b.patchValue;
+        return b.patchValue - a.patchValue;
+    });
+
     if (filtered.length === 0) {
         listBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #888;">조건에 맞는 아이템이 존재하지 않습니다.</td></tr>`;
         calculateChapterProgress([]);
@@ -324,16 +323,13 @@ function renderList() {
 
         const textColor = getRewardColor(item.rewardType);
         
-        // 🌟 [보안 장벽 원천 파쇄 100% 완전 출력 기조 준수]
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
-        // 표 내부에 렌더링될 때도 명칭 충돌 없이 무조건 깔끔한 한글 레이블로 변환해서 출력합니다.
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 번호, 보유, 아이콘, 이름, 패치, 획득처, 조건, 거래여부 총 8열 마크업 완벽 매핑 주입 🌟
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
@@ -349,7 +345,6 @@ function renderList() {
     calculateChapterProgress(filtered);
 }
 
-// 7. 보유 상태 실시간 스토리지 플러시 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -382,7 +377,6 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 8. 대시보드 백분율 통계 엔진 싱크
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -423,5 +417,4 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 비동기 엔진 가동 점화
 fetchData();
