@@ -13,7 +13,7 @@ let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
 let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
-let currentSortOrder = 'DESC';         // 패치 및 획득처 통합 정렬 변수
+let currentSortOrder = 'DESC';         // 패치 및 획득처 통합 정렬 변수 (기본값: 최신순 DESC)
 let currentSearchQuery = ''; 
 
 // 1. 원격 구글 시트 데이터 비동기 인프라 로드 및 매핑
@@ -25,6 +25,7 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
+        // 컴퓨터 인덱스 규칙 고정: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -32,6 +33,7 @@ async function fetchData() {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
+            // 이미지 주소 깨짐 원천봉쇄 공식 라인 색출기 가동
             let detectedIconUrl = '';
             for (let cell of row) {
                 const strCell = String(cell).trim();
@@ -47,9 +49,9 @@ async function fetchData() {
 
             return {
                 id: itemName,           
-                main: getVal(0),        // A열: 카테고리
+                main: getVal(0),        // A열: 카테고리 선택
                 sub: '전체 목록',       
-                icon: detectedIconUrl,  // B열: 아이콘 주소
+                icon: detectedIconUrl,  // B열: 아이콘 원본 주소
                 name: itemName,         // C열: 이름
                 patch: getVal(3),        // D열: 패치
                 originPlace: getVal(4),  // E열: 획득처
@@ -62,7 +64,7 @@ async function fetchData() {
 
         initMenu();
         initRewardMenu(); 
-        initOriginDropdown(); 
+        initOriginDropdown(); // 획득처 드롭다운 옵션 빌더 기동
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
@@ -81,7 +83,7 @@ function handleSearchInput() {
     renderList(); 
 }
 
-// 3. 아이템 획득 상태 필터 스위칭
+// 3. 아이템 획득 상태(보유/미보유) 스위칭 컨트롤러
 function selectStatusFilter(status) {
     currentStatusFilter = status;
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -91,9 +93,10 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (교집합 다중 연동 필터 및 지능형 리셋 시스템)
+// app.js - Part 2 (획득처 정렬 시 획득처 필터 자동 해제 및 스마트 리셋 시스템)
 // =========================================================================
 
+// 정렬 명령 스위치 핸들러
 function selectSortOrder(order) {
     currentSortOrder = order;
     document.querySelectorAll('.sort-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -102,6 +105,23 @@ function selectSortOrder(order) {
     if (order === 'DESC') document.getElementById('sort-desc').classList.add('active');
     if (order === 'ORIGIN_ASC') document.getElementById('sort-origin-asc').classList.add('active');
     if (order === 'ORIGIN_DESC') document.getElementById('sort-origin-desc').classList.add('active');
+    
+    // 🌟 [정렬 연동 패치 완료] 획득처 이름순 정렬 클릭 시 획득처 드롭다운을 자동으로 '전체 보기'로 풀어 정렬 범위 유지
+    if (order === 'ORIGIN_ASC' || order === 'ORIGIN_DESC') {
+        currentOriginFilter = 'ALL';
+        resetOriginDropdownUI();
+        
+        if (currentRewardFilter === 'ALL' && !currentSearchQuery) {
+            const activeMainBtn = document.querySelector('#main-category-group button.active');
+            if (activeMainBtn) {
+                currentMain = activeMainBtn.textContent;
+            } else {
+                const firstMainBtn = document.querySelector('#main-category-group button');
+                if (firstMainBtn) firstMainBtn.click();
+            }
+        }
+        updatePathDisplay();
+    }
     
     renderList();
 }
@@ -251,7 +271,6 @@ function restoreDefaultCategory() {
     }
 }
 
-// 🌟 [통합 알림 디스플레이 정상화] 테이블 구조를 파괴하지 않고 독립된 전용 하단 알림 상자 텍스트만 유연하게 바꿉니다.
 function updatePathDisplay() {
     const display = document.getElementById('current-path-display');
     if (!display) return;
@@ -272,12 +291,13 @@ function updateRewardFilterActive() {
     if(allBtn) allBtn.classList.add('active');
 }
 
+// 드롭다운 상자의 선택 위치를 첫 번째 'ALL' 옵션 위치로 강제 초기화 이동
 function resetOriginDropdownUI() {
     const dropdown = document.getElementById('condition-dropdown-filter');
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (게이지바 복구 핵심 알고리즘 탑재 및 최종 연산 마감)
+// app.js - Part 3 (교집합 연산 정렬 스코프 및 8열 무결성 렌더링)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -370,7 +390,7 @@ function renderList() {
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
                 const parts = item.name.split('(');
-                const mainTitle = parts[0].trim();
+                const mainTitle = parts.trim();
                 const subTitle = parts.slice(1).join('(').trim();
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
             }
@@ -421,7 +441,7 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 🌟 [전체 달성도 오리지널 복구 완결] HTML 구조를 깨뜨리지 않고 프로그레스 가로형 바를 선명하게 주입합니다.
+// 🌟 [전체 달성도 오리지널 복구 완결] 무너진 레이아웃을 파괴하지 않고 정직하게 숫자 수치 및 게이지바를 전개합니다.
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -430,11 +450,11 @@ function calculateTotalProgress() {
     const percent = Math.round((checkedCount / total) * 100);
 
     document.getElementById('total-percent').textContent = `${percent}%`;
-    document.getElementById('total-count').textContent = `${checkedCount}/${total}`;
+    document.getElementById('total-count').textContent = `(${checkedCount}/${total})`;
     document.getElementById('total-bar').style.width = `${percent}%`;
 }
 
-// 🌟 [현재 분류 수집율 오리지널 복구 완결] 필터 상황에 맞춰 제목 텍스트만 안전하게 수정하고 민트색 게이지바 그래프를 정상화합니다.
+// 🌟 [현재 분류 수집율 오리지널 복구 완결] 다중 필터명 변환 라벨 처리 매핑 및 민트색 그래프 연동 기동
 function calculateChapterProgress(currentItems) {
     const total = currentItems.length;
     const titleLabel = document.getElementById('chapter-title-label');
@@ -451,7 +471,7 @@ function calculateChapterProgress(currentItems) {
 
     if(total === 0) {
         document.getElementById('chapter-percent').textContent = `0%`;
-        document.getElementById('chapter-count').textContent = `0/0`;
+        document.getElementById('chapter-count').textContent = `(0/0)`;
         document.getElementById('chapter-bar').style.width = `0%`;
         return;
     }
@@ -459,7 +479,7 @@ function calculateChapterProgress(currentItems) {
     const percent = Math.round((checkedCount / total) * 100);
 
     document.getElementById('chapter-percent').textContent = `${percent}%`;
-    document.getElementById('chapter-count').textContent = `${checkedCount}/${total}`;
+    document.getElementById('chapter-count').textContent = `(${checkedCount}/${total})`;
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
