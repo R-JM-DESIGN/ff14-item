@@ -13,7 +13,7 @@ let currentMain = '';            // A열: 카테고리 필터링 타겟
 let currentRewardFilter = 'ALL';       // G열: 거래 여부 필터링 타겟
 let currentOriginFilter = 'ALL';       // E열: 획득처 필터링 타겟
 let currentStatusFilter = 'ALL';       // 보유/미보유 상태 필터 타겟
-let currentSortOrder = 'DESC';         // 패치 정렬 기준 (기본값: 최신순)
+let currentSortOrder = 'DESC';         // 패치 및 획득처 통합 정렬 변수 (기본값: 최신순 DESC)
 let currentSearchQuery = ''; 
 
 // 1. 원격 구글 시트 7개 컬럼 데이터 세트 초고속 로드 및 정밀 매핑
@@ -25,6 +25,7 @@ async function fetchData() {
         const rows = await res.json();
         if (!rows || rows.length <= 1) throw new Error("시트 내부 데이터 레코드가 부족하거나 비어있습니다.");
 
+        // 컴퓨터 인덱스 규칙 고정: A=0, B=1, C=2, D=3, E=4, F=5, G=6
         rawData = rows.slice(1).map((row) => {
             if (!row || !Array.isArray(row)) return null;
             
@@ -32,6 +33,7 @@ async function fetchData() {
                 return row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).trim() : '';
             };
 
+            // 이미지 주소 깨짐 원천봉쇄 공식 라인 색출기 가동
             let detectedIconUrl = '';
             for (let cell of row) {
                 const strCell = String(cell).trim();
@@ -62,7 +64,7 @@ async function fetchData() {
 
         initMenu();
         initRewardMenu(); 
-        initOriginDropdown(); 
+        initOriginDropdown(); // 획득처 드롭다운 옵션 빌더 기동
         calculateTotalProgress();
     } catch (error) {
         console.error(error);
@@ -74,12 +76,14 @@ async function fetchData() {
     }
 }
 
+// 2. 검색 인터페이스 키인 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
     currentSearchQuery = inputElement.value.trim().toLowerCase();
     renderList(); 
 }
 
+// 3. 아이템 획득 상태(보유/미보유) 스위칭 컨트롤러
 function selectStatusFilter(status) {
     currentStatusFilter = status;
     document.querySelectorAll('.status-filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -89,17 +93,23 @@ function selectStatusFilter(status) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (초기화 기능 추가 및 스마트 양방향 크로스 리셋 시스템)
+// app.js - Part 2 (다중 정렬 분기 및 스마트 양방향 크로스 리셋 시스템)
 // =========================================================================
 
+// 사용자가 지정한 정렬 타입에 맞춰 클래스 활성화 불빛을 제어하고 연산을 수행합니다.
 function selectSortOrder(order) {
     currentSortOrder = order;
     document.querySelectorAll('.sort-filter-btn').forEach(btn => btn.classList.remove('active'));
+    
     if (order === 'ASC') document.getElementById('sort-asc').classList.add('active');
     if (order === 'DESC') document.getElementById('sort-desc').classList.add('active');
+    if (order === 'ORIGIN_ASC') document.getElementById('sort-origin-asc').classList.add('active');
+    if (order === 'ORIGIN_DESC') document.getElementById('sort-origin-desc').classList.add('active');
+    
     renderList();
 }
 
+// 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
 function initMenu() {
     const mains = [...new Set(rawData.map(item => item.main))];
     const mainGroup = document.getElementById('main-category-group');
@@ -150,6 +160,7 @@ function initRewardMenu() {
     });
 }
 
+// E열의 획득처 종류를 중복 없이 추출하여 HTML <select> 박스 안에 옵션 자동 주입
 function initOriginDropdown() {
     const originTypes = [...new Set(rawData.map(item => item.originPlace))].filter(t => t && t !== '-');
     const dropdown = document.getElementById('condition-dropdown-filter');
@@ -200,6 +211,7 @@ function handleOriginDropdownChange(selectElement) {
     renderList();
 }
 
+// 원터치 초기화 매커니즘 연동: 초기화 버튼 클릭 시 획득처 필터를 깨끗하게 원격 클리어
 function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
@@ -245,7 +257,7 @@ function resetOriginDropdownUI() {
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (두 번째 괄호 정밀 타겟팅 줄바꿈 및 8열 렌더링 엔진)
+// app.js - Part 3 (8개 확장 열 실시간 렌더링 주입 및 대시보드 진행도 싱크)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -266,7 +278,7 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
+// 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -301,9 +313,18 @@ function renderList() {
         filtered = filtered.filter(item => checkedItems[item.id]);  
     }
 
+    // 통합 복합 정렬 분기 수행 (패치 버전 숫자 정렬 또는 획득처 가나다순 정렬)
     filtered.sort((a, b) => {
-        if (currentSortOrder === 'ASC') return a.patchValue - b.patchValue;
-        return b.patchValue - a.patchValue;
+        if (currentSortOrder === 'ASC') {
+            return a.patchValue - b.patchValue;
+        } else if (currentSortOrder === 'DESC') {
+            return b.patchValue - a.patchValue;
+        } else if (currentSortOrder === 'ORIGIN_ASC') {
+            return (a.originPlace || '').localeCompare(b.originPlace || '', 'ko');
+        } else if (currentSortOrder === 'ORIGIN_DESC') {
+            return (b.originPlace || '').localeCompare(a.originPlace || '', 'ko');
+        }
+        return 0;
     });
 
     if (filtered.length === 0) {
@@ -318,6 +339,8 @@ function renderList() {
         if(isChecked) tr.classList.add('completed');
 
         const textColor = getRewardColor(item.rewardType);
+        
+        // referrerpolicy 출처 정보 봉쇄 차단막 선언 고정 (100% 엑박 원천 차단 우회책)
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
@@ -325,24 +348,17 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 🌟 [두 번째 괄호 정밀 타겟팅 줄바꿈 핵심 인텔리전스 알고리즘]
+        // 🌟 [두 번째 괄호 정밀 타겟 브레이킹 엔터 알고리즘]
         let displayName = item.name;
         if (item.name && item.name.includes('(')) {
-            // 한 문장에 괄호가 2개 이상 존재하는 특수 데이터 패턴인지 검사
             const bracketCount = (item.name.match(/\(/g) || []).length;
-            
             if (bracketCount >= 2) {
-                // 첫 번째 괄호 위치를 찾은 뒤, 그 바로 뒤부터 탐색하여 '진짜 두 번째 괄호'의 시작 위치 인덱스를 알아냅니다.
                 const firstIdx = item.name.indexOf('(');
                 const secondIdx = item.name.indexOf('(', firstIdx + 1);
-                
-                // 두 번째 괄호 앞뒤로 슬라이싱 절단
                 const mainTitle = item.name.substring(0, secondIdx).trim();
                 const subTitle = item.name.substring(secondIdx).trim();
-                
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
-                // 괄호가 1개만 있을 때는 기존처럼 첫 번째 괄호 앞에서 정직하게 엔터 처리
                 const parts = item.name.split('(');
                 const mainTitle = parts[0].trim();
                 const subTitle = parts.slice(1).join('(').trim();
@@ -365,7 +381,7 @@ function renderList() {
     calculateChapterProgress(filtered);
 }
 
-// 보유 상태 실시간 변경 토글 핸들러
+// 보유 상태 변경 감지 세이브 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -398,7 +414,6 @@ function toggleItem(id, checkbox) {
     }
 }
 
-// 대시보드 백분율 진행도 연산 엔진 싱크
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -431,7 +446,7 @@ function calculateChapterProgress(currentItems) {
         document.getElementById('chapter-bar').style.width = `0%`;
         return;
     }
-    const checkedCount = currentItems.filter(item => checkedItems[item.id]).length;
+    const checkedCount = currentItems.filter(item => checkedItems[id]).length;
     const percent = Math.round((checkedCount / total) * 100);
 
     document.getElementById('chapter-percent').textContent = `${percent}%`;
@@ -439,5 +454,5 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 비동기 엔진 최초 구동 트리거 실행
+// 비동기 엔진 최초 구동 트리거 점화 실행
 fetchData();
