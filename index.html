@@ -383,7 +383,7 @@
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
-                /* 🌟 머리글 및 아래 항목들까지 전체 중앙 정렬 고정 */
+                /* 머리글 및 아래 항목들까지 전체 중앙 정렬 고정 */
                 text-align: center;
                 font-size: 0.95rem;
             }
@@ -407,13 +407,15 @@
                 transition: color 0.3s;
             }
 
-            /* 🌟 [초정밀 너비 커스텀 분배 스코프] */
+            /* 🌟 [요청 사양에 맞춘 너비 커스텀 재분배 스코프] */
             .col-no { width: 5%; color: var(--text-muted); }
             .col-check { width: 6%; }
             .col-icon { width: 8%; }
-            .col-name { width: 23%; font-weight: bold; }
             
-            /* ⚡ [패치] 7.58 크기에 맞춤 타이트 고정 (줄바꿈 원천 차단 및 폭 최소화) */
+            /* ⚡ [이름] 기존 23% -> 38%로 대폭 확장하여 가독성 업그레이드 완료 */
+            .col-name { width: 38%; font-weight: bold; }
+            
+            /* [패치] 7.58 규격 맞춤 최소 타이트 고정 유지 */
             .col-cond { 
                 width: 1%; 
                 white-space: nowrap; 
@@ -422,8 +424,8 @@
                 font-weight: 500; 
             }
             
-            /* ⚡ [획득처] 패치에서 줄인 잔여 폭을 전부 흡수하여 최대 크기(47%)로 확장 */
-            .col-score { width: 47%; }
+            /* ⚡ [획득처] 기존 47% -> 32%로 15% 감축 완료 */
+            .col-score { width: 32%; }
             
             .col-rw-type { width: 10%; }
 
