@@ -1,6 +1,6 @@
 // app.js - Part 1
 // 🌟 사용자님의 실제 구글 웹 앱 주소를 최상단에 고정하여 CORS 우회 연동을 지원합니다.
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxzHJ7pYhEJXYQseJxmYAogVnL5EDRnSU0RD1_IBCILBNkihy6usAmUqGGVrXzOzlQm/exec';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzb9Fme3-R6FL-twHsbKrBQg4uMHgaiQlU57RPBsi5PW1GEPuwrZnRtyc4B5jZYHeJ/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
 
 let rawData = [];
