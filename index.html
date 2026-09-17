@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게임 아이템 획득 체크리스트 도감</title>
-    <!-- 🌟 스크린샷의 다크 모드 시그니처 컬러셋 및 라이트 모드 유동 변수 정의 -->
+    <!-- 🌟 브라우저 탭 상단 타이틀도 명칭 싱크 매칭 완료 -->
+    <title>FF14 아이템 획득 체크리스트</title>
+    <!-- 🎨 스크린샷과 100% 일치하는 넷플릭스 스타일 다크 톤앤매너 정의 -->
     <style>
         :root {
             --bg-color: #121212;             /* 완전 어두운 메인 배경 */
@@ -52,22 +53,11 @@
             position: relative;
         }
 
-        .header-wrapper {
+        /* 🌓 최상단 한 줄 레이아웃 */
+        .top-header-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0;
-            color: #ffffff;
-        }
-        body.light-mode h1 {
-            color: #212529;
+            justify-content: flex-end;
+            margin-bottom: 10px;
         }
 
         .theme-toggle-btn {
@@ -87,31 +77,45 @@
             border-color: var(--accent-orange);
         }
 
-        /* 💡 이미지 속 상단 이용 안내 박스 완벽 커스텀 */
-        .info-box {
+        /* 🌟 제목, 이용 안내, 게이지바를 통합한 싱글 블랙 박스 */
+        .master-dashboard-box {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
+
+        .master-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        body.light-mode .master-title { color: #212529; }
 
         .info-title {
             color: var(--accent-orange);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: bold;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .info-list {
-            margin: 0;
+            margin: 0 0 25px 0;
             padding-left: 0;
             list-style: none;
+            border-bottom: 1px solid #252525;
+            padding-bottom: 20px;
         }
+        body.light-mode .info-list { border-bottom: 1px solid #e9ecef; }
 
         .info-list li {
             color: var(--text-main);
@@ -130,49 +134,45 @@
         }
 
         .info-list li span.highlight {
-            color: #c5a3ff; /* 기존 메일 주소 강조용 연보라빛 매칭 */
+            color: #c5a3ff;
             font-weight: 500;
         }
 
-        /* 📊 대시보드 프로그레스 바 레이아웃 */
-        .dashboard {
+        /* 📊 통합 박스 내부의 대시보드 수집율 레이아웃 */
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
         }
 
-        .dashboard-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 18px 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .dashboard-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .card-header {
+        .metric-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
         }
 
-        .card-title {
-            font-size: 0.95rem;
+        .metric-title {
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-muted);
         }
 
-        .card-value {
-            font-size: 1.4rem;
+        .metric-value {
+            font-size: 1.15rem;
             font-weight: 700;
-            color: var(--accent-orange); /* 진행 수치 오렌지 고정 */
+            color: var(--accent-orange);
         }
 
         .progress-container {
             background-color: #111111;
-            border-radius: 50px;
-            height: 10px;
+            border-radius: 4px;
+            height: 8px;
             overflow: hidden;
             width: 100%;
             border: 1px solid #222;
@@ -183,26 +183,31 @@
         }
 
         .progress-bar {
-            background: linear-gradient(90deg, #555555, #888888); /* 원본 그레이 게이지 매칭 */
+            background: linear-gradient(90deg, #555555, #888888); /* 원본 단색 그레이 바 구현 */
             height: 100%;
             width: 0%;
             transition: width 0.4s ease-in-out;
         }
 
-        /* 🔍 실시간 통합 검색바 스타일 */
+        .count-display {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* 🔍 아이템 통합 검색바 스타일 */
         .search-section {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 25px;
-            transition: background-color 0.3s;
         }
 
         .search-label {
             font-size: 0.95rem;
             font-weight: 600;
-            color: #93c5fd; /* 파란색 안내 톤 링크 스타일 매칭 */
+            color: #93c5fd;
             margin-bottom: 12px;
             display: block;
         }
@@ -235,16 +240,18 @@
 </head>
 <body>
     <div class="container">
-        <!-- 타이틀 헤더 및 다크모드/라이트모드 스위치 버튼 배치 -->
-        <div class="header-wrapper">
-            <h1>🎮 게임 아이템 획득 체크리스트 도감</h1>
+        <!-- 우측 상단 테마 토글 스위치 행 -->
+        <div class="top-header-row">
             <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()">
                 <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
             </button>
         </div>
         
-        <!-- 💡 스크린샷과 동일한 규격의 이용 안내 박스 적용 완료 -->
-        <div class="info-box">
+        <!-- 🌟 제목 + 이용안내 + 달성도를 하나로 결합한 통합형 대시보드 마스터 박스 -->
+        <div class="master-dashboard-box">
+            <!-- 🌟 [FF14 아이템 획득 체크리스트] 타이틀 변경 완결 -->
+            <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
+            
             <div class="info-title">💡 이용 안내</div>
             <ul class="info-list">
                 <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
@@ -252,37 +259,38 @@
                 <li>콘텐츠에 따라 획득 방법 스포일러가 있을 수 있으니 열람에 유의하십시오.</li>
                 <li>오타, 잘못된 정보 확인, 이외 문의·건의 사항은 <span class="highlight">질문방 또는 디스코드</span>로 보내주세요.</li>
             </ul>
-        </div>
 
-        <!-- 📊 대시보드 영역 -->
-        <div class="dashboard">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <span class="card-title">전체 아이템 도감 달성도</span>
-                    <span id="total-percent" class="card-value">0%</span>
+            <div class="dashboard-grid">
+                <!-- 전체 달성도 바 -->
+                <div class="dashboard-item">
+                    <div class="metric-header">
+                        <span class="metric-title">전체 아이템 도감 달성도</span>
+                        <span id="total-percent" class="metric-value">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="total-bar" class="progress-bar"></div>
+                    </div>
+                    <div class="count-display">
+                        획득 개수: <span id="total-count" style="color: var(--text-main); font-weight: bold;">0/0</span>
+                    </div>
                 </div>
-                <div class="progress-container">
-                    <div id="total-bar" class="progress-bar"></div>
-                </div>
-                <div style="text-align: right; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
-                    획득 개수: <span id="total-count" style="color: var(--text-main); font-weight: bold;">0/0</span>
+
+                <!-- 현재 분류 수집율 바 -->
+                <div class="dashboard-item">
+                    <div class="metric-header">
+                        <span class="metric-title" id="chapter-title-label">현재 분류 수집율</span>
+                        <span id="chapter-percent" class="metric-value">0%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="chapter-bar" class="progress-bar"></div>
+                    </div>
+                    <div class="count-display">
+                        필터 항목: <span id="chapter-count" style="color: var(--text-main); font-weight: bold;">0/0</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <span class="card-title" id="chapter-title-label">현재 분류 수집율</span>
-                    <span id="chapter-percent" class="card-value">0%</span>
-                </div>
-                <div class="progress-container">
-                    <div id="chapter-bar" class="progress-bar"></div>
-                </div>
-                <div style="text-align: right; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
-                    필터 항목: <span id="chapter-count" style="color: var(--text-main); font-weight: bold;">0/0</span>
-                </div>
-            </div>
-            
-            <!-- 가상 싱크 홀더 유지를 위한 숨김 처리 -->
+            <!-- 가상 싱크 홀더 보존용 (숨김) -->
             <div style="display:none;">
                 <span id="score-total">0</span><span id="score-max">0</span><div id="score-bar"></div>
             </div>
@@ -350,7 +358,7 @@
                 background-color: rgba(255, 159, 28, 0.1);
             }
 
-            /* 스크런샷 감성 액티브 컬러 매칭 */
+            /* 스크린샷 감성 액티브 테마 컬러 바인딩 */
             .btn-group button.active {
                 background-color: #3b82f6; /* 파란색 활성화 */
                 border-color: #3b82f6;
@@ -362,7 +370,7 @@
                 border-color: #10b981;
             }
             .btn-group button.reward-filter-btn.active {
-                background-color: #ef4444; /* 핫핑크/레드 필터해제 매칭 */
+                background-color: #ef4444; /* 레드/핫핑크 필터해제 매칭 */
                 border-color: #ef4444;
             }
 
@@ -422,7 +430,7 @@
         <style>
             .table-responsive {
                 overflow-x: auto;
-                /* 🎨 스크린샷과 동일한 진한 블랙 카드 배경 및 둥근 모서리 구현 */
+                /* 스크린샷과 동일한 진한 블랙 카드 배경 및 둥근 모서리 구현 */
                 background-color: #1a1a1a;
                 border: 1px solid #2a2a2a;
                 border-radius: 8px;
@@ -434,14 +442,14 @@
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
-                /* 🌟 전체 중앙 정렬 고정 */
+                /* 정밀 전체 중앙 정렬 원칙 설정 */
                 text-align: center;
                 font-size: 0.95rem;
                 background-color: #1a1a1a;
             }
 
             .item-table th {
-                /* 🎨 스크린샷의 짙은 블랙 헤더 색상 매칭 */
+                /* 스크린샷의 짙은 블랙 헤더 색상 매칭 */
                 background-color: #151515;
                 color: #aaaaaa;
                 padding: 14px 16px;
@@ -458,7 +466,7 @@
                 color: #e0e0e0;
             }
 
-            /* 🌟 [초정밀 황금 비율 너비 설정 수용] */
+            /* [초정밀 황금 비율 너비 설정 적용] */
             .col-no { width: 5%; color: #888888; }
             .col-check { width: 6%; }
             .col-icon { width: 8%; }
@@ -473,7 +481,7 @@
                 padding-left: 5px; 
                 padding-right: 5px;
                 font-weight: 500; 
-                color: #93c5fd; /* 패치 버전 정보 블루톤 매칭 */
+                color: #93c5fd; 
             }
             
             /* [획득처] 넉넉하고 시원한 42% 면적 고정 */
@@ -481,7 +489,7 @@
             
             .col-rw-type { width: 10%; }
 
-            /* 🎨 체크박스 인게임 스타일 스케일 및 색상 싱크 */
+            /* 체크박스 인게임 스타일 스케일 및 색상 싱크 */
             .item-table input[type="checkbox"] {
                 width: 18px;
                 height: 18px;
@@ -489,7 +497,7 @@
                 accent-color: #ff9f1c; /* 체크 시 포인트 오렌지 컬러 발색 */
             }
 
-            /* 🎨 획득 완료 처리 행 상태 연출 (스크린샷처럼 완료 시 텍스트 어둡게 처리) */
+            /* 획득 완료 처리 행 상태 연출 (완료 시 텍스트 어둡게 처리) */
             .item-table tr.completed {
                 background-color: rgba(255, 255, 255, 0.01);
             }
@@ -518,7 +526,7 @@
                 height: 44px;
                 background-color: #2a2a2a;
                 border: 1px solid #444444;
-                border-radius: 4px; /* 라운드 대신 각진 스타일 매칭 */
+                border-radius: 4px; 
                 color: #ffffff;
                 font-size: 1rem;
                 cursor: pointer;
