@@ -245,7 +245,7 @@ function resetOriginDropdownUI() {
     if (dropdown) dropdown.value = 'ALL';
 }
 // =========================================================================
-// app.js - Part 3 (8개 확장 열 실시간 렌더링 주입 및 대시보드 진행도 싱크)
+// app.js - Part 3 (두 번째 괄호 정밀 타겟팅 줄바꿈 및 8열 렌더링 엔진)
 // =========================================================================
 
 function isTradeable(rawType) {
@@ -266,6 +266,7 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
+// 6. 실시간 복합 필터 주입 및 8열 정밀 렌더링 엔진 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -317,7 +318,6 @@ function renderList() {
         if(isChecked) tr.classList.add('completed');
 
         const textColor = getRewardColor(item.rewardType);
-        
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
@@ -325,16 +325,29 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
-        // 🌟 [괄호 앞 강제 엔터 분리 알고리즘 탑재]
-        // 텍스트 매칭 결함을 방지하기 위해 정밀 가공 처리 후 HTML에 주입합니다.
+        // 🌟 [두 번째 괄호 정밀 타겟팅 줄바꿈 핵심 인텔리전스 알고리즘]
         let displayName = item.name;
         if (item.name && item.name.includes('(')) {
-            const parts = item.name.split('(');
-            const mainTitle = parts[0].trim(); // 괄호 앞의 주 이름
-            const subTitle = parts.slice(1).join('(').trim(); // 괄호 뒤의 서브 이름
+            // 한 문장에 괄호가 2개 이상 존재하는 특수 데이터 패턴인지 검사
+            const bracketCount = (item.name.match(/\(/g) || []).length;
             
-            // 괄호 앞 지점에서 강제로 줄바꿈(<br>)을 수행하고 디자인용 스팬 태그를 두릅니다.
-            displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
+            if (bracketCount >= 2) {
+                // 첫 번째 괄호 위치를 찾은 뒤, 그 바로 뒤부터 탐색하여 '진짜 두 번째 괄호'의 시작 위치 인덱스를 알아냅니다.
+                const firstIdx = item.name.indexOf('(');
+                const secondIdx = item.name.indexOf('(', firstIdx + 1);
+                
+                // 두 번째 괄호 앞뒤로 슬라이싱 절단
+                const mainTitle = item.name.substring(0, secondIdx).trim();
+                const subTitle = item.name.substring(secondIdx).trim();
+                
+                displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
+            } else {
+                // 괄호가 1개만 있을 때는 기존처럼 첫 번째 괄호 앞에서 정직하게 엔터 처리
+                const parts = item.name.split('(');
+                const mainTitle = parts[0].trim();
+                const subTitle = parts.slice(1).join('(').trim();
+                displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
+            }
         }
 
         tr.innerHTML = `
@@ -352,6 +365,7 @@ function renderList() {
     calculateChapterProgress(filtered);
 }
 
+// 보유 상태 실시간 변경 토글 핸들러
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
     if (checkbox.checked) {
@@ -384,6 +398,7 @@ function toggleItem(id, checkbox) {
     }
 }
 
+// 대시보드 백분율 진행도 연산 엔진 싱크
 function calculateTotalProgress() {
     const total = rawData.length;
     if(total === 0) return;
@@ -424,4 +439,5 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
+// 비동기 엔진 최초 구동 트리거 실행
 fetchData();
