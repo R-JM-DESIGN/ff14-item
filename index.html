@@ -148,7 +148,6 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            
         }
 
         .metric-header {
@@ -332,6 +331,8 @@
                 padding: 15px 20px;
                 box-sizing: border-box;
                 transition: background-color 0.3s;
+                display: flex;
+                flex-direction: column;
             }
 
             .filter-title {
@@ -387,9 +388,63 @@
                 background-color: #ef4444; /* 거래여부 레드 활성화 */
                 border-color: #ef4444;
             }
-            .btn-group button.condition-filter-btn.active {
-                background-color: #ff9f1c; /* 획득처 오렌지 활성화 */
-                border-color: #ff9f1c;
+            .btn-group button.sort-filter-btn.active {
+                background-color: #a855f7; /* 패치정렬 보라색 활성화 매칭 */
+                border-color: #a855f7;
+            }
+
+            /* 🌟 다크 모드 감성의 획득처 필터 드롭다운 가로 정렬 컨테이너 */
+            .dropdown-control-group {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+                margin-top: 4px;
+            }
+
+            .filter-dropdown {
+                flex: 1;
+                background-color: #222222;
+                border: 1px solid #333333;
+                border-radius: 4px;
+                color: #dddddd;
+                padding: 10px 14px;
+                font-size: 0.85rem;
+                font-family: inherit;
+                cursor: pointer;
+                outline: none;
+                transition: all 0.15s;
+            }
+            body.light-mode .filter-dropdown {
+                background-color: #f1f3f5;
+                border: 1px solid #dee2e6;
+                color: #495057;
+            }
+            .filter-dropdown:hover, .filter-dropdown:focus {
+                border-color: var(--accent-orange);
+            }
+
+            /* 🌟 [신설] 드롭다운 전용 독립형 초기화 (Clear) 버튼 전용 핫레드 스타일 */
+            .clear-action-btn {
+                background-color: #2a2a2a;
+                border: 1px solid #444444;
+                border-radius: 4px;
+                color: #ff6b6b;
+                padding: 10px 16px;
+                font-size: 0.85rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.15s;
+                white-space: nowrap;
+            }
+            body.light-mode .clear-action-btn {
+                background-color: #fff0f0;
+                border: 1px solid #fec5bb;
+                color: #e63946;
+            }
+            .clear-action-btn:hover {
+                border-color: #ff6b6b;
+                background-color: rgba(255, 107, 107, 0.1);
+                box-shadow: 0 0 8px rgba(255, 107, 107, 0.2);
             }
 
             .path-display-box {
@@ -407,13 +462,22 @@
 
         <!-- 필터 컨트롤 그룹 -->
         <div class="filter-section">
-            <!-- 1. 보유 상태 필터 -->
-            <div class="filter-row">
-                <div class="filter-title">✔ 아이템 획득 상태 필터</div>
-                <div class="btn-group">
-                    <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
-                    <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
-                    <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
+            <!-- 1. 보유 상태 필터 + 패치 버전 정렬 필터 -->
+            <div class="filter-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <div class="filter-title">✔ 아이템 획득 상태 필터</div>
+                    <div class="btn-group">
+                        <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
+                        <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
+                        <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
+                    </div>
+                </div>
+                <div>
+                    <div class="filter-title">🔢 패치 버전 정렬</div>
+                    <div class="btn-group">
+                        <button id="sort-asc" class="sort-filter-btn" onclick="selectSortOrder('ASC')">패치 낮은순 ▲</button>
+                        <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
+                    </div>
                 </div>
             </div>
 
@@ -428,7 +492,7 @@
             <!-- 소분류 고정 플레이스홀더 (은닉) -->
             <div style="display: none;" id="sub-category-group"></div>
 
-            <!-- 🌟 [공간 50% 분할 연동 필터 라인 개설] 거래 여부와 획득처가 나란히 한 줄에 배치됩니다. -->
+            <!-- 공간 50% 분할 연동 필터 라인 (좌측 거래 여부, 우측 드롭다운 + Clear 버튼) -->
             <div class="filter-split-row">
                 <!-- 3-1. 거래 여부 필터 칸 (좌측 50%) -->
                 <div class="filter-half-column">
@@ -438,11 +502,16 @@
                     </div>
                 </div>
 
-                <!-- 3-2. 획득처 필터 칸 (우측 50% 신설) -->
+                <!-- 3-2. 획득처 드롭다운 필터 칸 (우측 50% + Clear 단추 결합 🌟) -->
                 <div class="filter-half-column">
                     <div class="filter-title">🗺️ 획득처 필터</div>
-                    <div id="condition-category-group" class="btn-group">
-                        <button class="condition-filter-btn active">로딩 중...</button>
+                    <div class="dropdown-control-group">
+                        <!-- 옵션 자동 파싱 셀렉트 박스 -->
+                        <select id="condition-dropdown-filter" class="filter-dropdown" onchange="handleOriginDropdownChange(this)">
+                            <option value="ALL">전체 보기 (필터 해제)</option>
+                        </select>
+                        <!-- 🌟 [신설 사양] 클릭 시 획득처 필터만 즉시 해제해주는 초기화 버튼 엘리먼트 -->
+                        <button id="clear-origin-btn" class="clear-action-btn" onclick="clearOriginDropdownFilter()">초기화</button>
                     </div>
                 </div>
             </div>
@@ -489,7 +558,7 @@
                 color: #e0e0e0;
             }
 
-            /* 🌟 [초정밀 8개 컬럼 확장 테이블 너비 가독성 최적 배분] */
+            /* [초정밀 8개 컬럼 확장 테이블 너비 가독성 최적 배분] */
             .col-no { width: 4%; color: #888888; }
             .col-check { width: 5%; }
             .col-icon { width: 6%; }
@@ -581,7 +650,6 @@
                         <th>패치</th>
                         <th>획득처</th>
                         <th>조건</th>
-                        <!-- 🌟 [장게 거래] ➡️ [거래 여부] 명칭 치환 최종 전면 적용 완료! -->
                         <th style="text-align: center;">거래 여부</th>
                     </tr>
                 </thead>
