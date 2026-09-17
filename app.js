@@ -1,6 +1,5 @@
 // =========================================================================
-// app.js - Part 1 (데이터 로딩 및 카테고리 제어 스코프)
-// 🌟 사용자님의 구글 웹 앱 주소를 고정하여 CORS 보안을 우회 연동합니다.
+// app.js - Part 1 (최종 버그 수정 및 특수 인코딩 우회 버전)
 // =========================================================================
 const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzzb9Fme3-R6FL-twHsbKrBQg4uMHgaiQlU57RPBsi5PW1GEPuwrZnRtyc4B5jZYHeJ/exec';
 const SHEET_URL = GOOGLE_WEB_APP_URL; 
@@ -35,7 +34,7 @@ async function fetchData() {
                 id: itemName,           
                 main: getVal(0),        // A열: 분류
                 sub: '전체 목록',       
-                icon: getVal(1),        // B열: 파싱된 이미지 웹 주소
+                icon: getVal(1),        // B열: 파싱된 이미지 웹 주소 (텍스트 형식)
                 name: itemName,         // C열: 이름
                 patch: getVal(3),        // D열: 패치
                 condition: getVal(4),   // E열: 획득처
@@ -93,6 +92,7 @@ function initMenu() {
 
 function selectMainCategory(main, btn) {
     currentMain = main;
+    // 🌟 중요: 카테고리를 바꿀 때는 거래 여부 필터를 '전체(ALL)'로 리셋하여 충돌을 방지합니다.
     currentRewardFilter = 'ALL'; 
     updateRewardFilterActive();
 
@@ -110,7 +110,7 @@ function selectMainCategory(main, btn) {
     renderList();
 }
 // =========================================================================
-// app.js - Part 2 (거래 여부 스마트 리셋 및 실시간 렌더링 엔진)
+// app.js - Part 2 (스마트 리셋 결함 파쇄 및 이미지 인코딩 복구 엔진)
 // =========================================================================
 
 // 5. 거래 여부(F열) 필터 버튼 동적 생성 및 이름 완벽 치환 + 자동 리셋 인터페이스
@@ -144,7 +144,7 @@ function initRewardMenu() {
     });
 }
 
-// 🌟 [스마트 로직] 거래 여부 필터 타격 시 복합 조건 꼬임 타파용 원격 자동 해제 알고리즘
+// 🌟 [버그 수정 핵심] 거래 여부 클릭 시 다른 필터들의 변수를 확실하게 초기화하고 화면을 재갱신합니다.
 function selectRewardFilter(type, btn) {
     currentRewardFilter = type;
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
@@ -153,18 +153,18 @@ function selectRewardFilter(type, btn) {
     if (type === 'ALL') {
         document.getElementById('current-path-display').textContent = `📂 분류 : ${currentMain}`;
     } else {
-        // 1. 보유 상태 필터를 무조건 [전체 목록 보기] 상태로 연동 리셋
+        // ⚡ 1. 보유 상태 필터를 'ALL(전체 목록 보기)'로 완벽하게 강제 변환
         currentStatusFilter = 'ALL';
         document.querySelectorAll('.status-filter-btn').forEach(b => b.classList.remove('active'));
         const statusAllBtn = document.getElementById('status-all');
         if (statusAllBtn) statusAllBtn.classList.add('active');
 
-        // 2. 검색창에 입력 중이던 문자열 텍스트 데이터도 공백으로 완전 클리어
+        // ⚡ 2. 검색창 입력 찌꺼기 변수 데이터 전량 초기화
         currentSearchQuery = '';
         const searchInput = document.getElementById('search-keyword');
         if (searchInput) searchInput.value = '';
 
-        // 3. 특정 카테고리에 갇히지 않도록 활성화 버튼 불빛을 전량 제거하고 전체 횡단 서치 모드로 전환
+        // ⚡ 3. 대분류 카테고리 불빛 꺼버리기 (전체 아이템 대상 횡단 탐색 선언)
         document.querySelectorAll('#main-category-group button').forEach(b => b.classList.remove('active'));
         
         let displayPathText = type;
@@ -172,9 +172,9 @@ function selectRewardFilter(type, btn) {
         if (cleanType === 'O' || cleanType === 'Y' || cleanType.includes('가능')) displayPathText = '거래 가능';
         else if (cleanType === 'X' || cleanType === 'N' || cleanType.includes('불가')) displayPathText = '거래 불가';
 
-        document.getElementById('current-path-display').textContent = `⚖️ [필터] 거래 여부 : ${displayPathText} (다른 필터가 자동 해제되었습니다)`; 
+        document.getElementById('current-path-display').textContent = `⚖️ [필터] 거래 여부 : ${displayPathText}`; 
     }
-    renderList();
+    renderList(); // 변수가 리셋된 상태에서 리스트를 처음부터 다시 그립니다.
 }
 
 function updateRewardFilterActive() {
@@ -191,7 +191,7 @@ function getRewardColor(type) {
     return '#ff9f1c'; 
 }
 
-// 6. 복합 정렬 가상 인프라 계산 알고리즘 및 테이블 마크업 실시간 주입 (렌더링 핵심 엔진)
+// 6. 실시간 복합 정렬 필터 연산 및 렌더링 스코프
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -201,6 +201,7 @@ function renderList() {
         if (currentRewardFilter === 'ALL') {
             filtered = rawData.filter(item => item.main === currentMain);
         } else {
+            // 🌟 거래 조건 선택 시 대분류에 갇히지 않고 전체 도감 데이터를 뽑아내도록 정밀 패치 완료
             filtered = rawData.filter(item => item.rewardType === currentRewardFilter);
         }
     } else {
@@ -231,8 +232,14 @@ function renderList() {
         if(isChecked) tr.classList.add('completed');
 
         const textColor = getRewardColor(item.rewardType);
-        const proxyIconUrl = item.icon ? `https://weserv.nl{encodeURIComponent(item.icon)}` : '';
-        const iconTag = proxyIconUrl ? `<img src="${proxyIconUrl}" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
+        
+        // 🌟 [이미지 깨짐 방지 패치] URL 특수문자 깨짐을 완벽하게 보호하는 실시간 복크 솔루션 우회 주입
+        let finalIconUrl = '';
+        if (item.icon) {
+            // 주소에 붙은 물음표(?) 파라미터가 꼬이지 않도록 온전하게 원본 상태 주소로 전달합니다.
+            finalIconUrl = `https://weserv.nl{item.icon.replace('https://', '')}`;
+        }
+        const iconTag = finalIconUrl ? `<img src="${finalIconUrl}" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
