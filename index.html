@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 🌟 브라우저 탭 상단 타이틀도 명칭 싱크 매칭 완료 -->
     <title>FF14 아이템 획득 체크리스트</title>
     <!-- 🎨 스크린샷과 100% 일치하는 넷플릭스 스타일 다크 톤앤매너 정의 -->
     <style>
@@ -48,7 +47,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1500px; /* 8개 컬럼 확장에 맞춘 시원한 대화면 배치 */
             margin: 0 auto;
             position: relative;
         }
@@ -77,7 +76,7 @@
             border-color: var(--accent-orange);
         }
 
-        /* 🌟 제목, 이용 안내, 게이지바를 통합한 싱글 블랙 박스 */
+        /* 제목, 이용 안내, 게이지바를 통합한 싱글 블랙 박스 */
         .master-dashboard-box {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -138,7 +137,7 @@
             font-weight: 500;
         }
 
-        /* 📊 통합 박스 내부의 대시보드 수집율 레이아웃 */
+        /* 통합 박스 내부의 대시보드 수집율 레이아웃 */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -183,7 +182,7 @@
         }
 
         .progress-bar {
-            background: linear-gradient(90deg, #555555, #888888); /* 원본 단색 그레이 바 구현 */
+            background: linear-gradient(90deg, #555555, #888888);
             height: 100%;
             width: 0%;
             transition: width 0.4s ease-in-out;
@@ -247,17 +246,15 @@
             </button>
         </div>
         
-        <!-- 🌟 제목 + 이용안내 + 달성도를 하나로 결합한 통합형 대시보드 마스터 박스 -->
+        <!-- 제목 + 이용안내 + 달성도 통합 마스터 박스 -->
         <div class="master-dashboard-box">
-            <!-- 🌟 [FF14 아이템 획득 체크리스트] 타이틀 변경 완결 -->
             <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
             
             <div class="info-title">💡 이용 안내</div>
             <ul class="info-list">
                 <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
-                <li>개인 브라우저에 저장되는 사이트입니다. 로그인이 필요하지 않으나, 캐시 삭제 및 IP 변경 시 정보가 사라질 수 있습니다.</li>
-                <li>콘텐츠에 따라 획득 방법 스포일러가 있을 수 있으니 열람에 유의하십시오.</li>
-                <li>오타, 잘못된 정보 확인, 이외 문의·건의 사항은 <span class="highlight">질문방 또는 디스코드</span>로 보내주세요.</li>
+                <li>개인 브라우저에 저장되는 도감 시스템입니다. 캐시 삭제 시 데이터가 초기화될 수 있습니다.</li>
+                <li>문의 사항은 질문방을 이용해 주시기 바랍니다.</li>
             </ul>
 
             <div class="dashboard-grid">
@@ -320,6 +317,22 @@
                 transition: background-color 0.3s;
             }
 
+            /* 🌟 [공간 절반 분할 레이아웃 디자인 프로토콜] */
+            .filter-split-row {
+                display: flex;
+                gap: 15px;
+                width: 100%;
+            }
+            .filter-half-column {
+                flex: 1; /* 정확히 50% 비율로 형제 컬럼과 양분 배치 */
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 15px 20px;
+                box-sizing: border-box;
+                transition: background-color 0.3s;
+            }
+
             .filter-title {
                 font-size: 0.9rem;
                 font-weight: 600;
@@ -358,20 +371,24 @@
                 background-color: rgba(255, 159, 28, 0.1);
             }
 
-            /* 스크린샷 감성 액티브 테마 컬러 바인딩 */
+            /* 각 유동적 필터 전용 액티브 색상 분기 맵핑 */
             .btn-group button.active {
-                background-color: #3b82f6; /* 파란색 활성화 */
+                background-color: #3b82f6; /* 카테고리 블루 활성화 */
                 border-color: #3b82f6;
                 color: #ffffff;
                 font-weight: bold;
             }
             .btn-group button.status-filter-btn.active {
-                background-color: #10b981; /* 초록색 활성화 */
+                background-color: #10b981; /* 획득상태 그린 활성화 */
                 border-color: #10b981;
             }
             .btn-group button.reward-filter-btn.active {
-                background-color: #ef4444; /* 레드/핫핑크 필터해제 매칭 */
+                background-color: #ef4444; /* 거래여부 레드 활성화 */
                 border-color: #ef4444;
+            }
+            .btn-group button.condition-filter-btn.active {
+                background-color: #ff9f1c; /* 획득처 오렌지 활성화 */
+                border-color: #ff9f1c;
             }
 
             .path-display-box {
@@ -399,7 +416,7 @@
                 </div>
             </div>
 
-            <!-- 2. 카테고리 필터 (A열 기준 동적 생성) -->
+            <!-- 2. 카테고리 필터 -->
             <div class="filter-row">
                 <div class="filter-title">📁 카테고리 선택</div>
                 <div id="main-category-group" class="btn-group">
@@ -407,17 +424,26 @@
                 </div>
             </div>
 
-            <!-- 3. 소분류 고정 플레이스홀더 (UI 구조 제어 우회용) -->
-            <div class="filter-row" style="display: none;">
-                <div class="filter-title">📂 세부 필터 그룹</div>
-                <div id="sub-category-group" class="btn-group"></div>
-            </div>
+            <!-- 소분류 고정 플레이스홀더 (은닉) -->
+            <div style="display: none;" id="sub-category-group"></div>
 
-            <!-- 4. 거래 여부 필터 (F열 기준 동적 생성) -->
-            <div class="filter-row">
-                <div class="filter-title">⚖️ 거래 여부</div>
-                <div id="reward-category-group" class="btn-group">
-                    <button class="reward-filter-btn active">로딩 중...</button>
+            <!-- 🌟 [공간 50% 분할 연동 필터 라인 개설] 거래 여부와 획득처가 나란히 한 줄에 배치됩니다. -->
+            <div class="filter-split-row">
+                <!-- 3-1. 거래 여부 필터 칸 (좌측 50%) -->
+                <div class="filter-half-column">
+                    <div class="filter-title">⚖️ 거래 여부</div>
+                    <div id="reward-category-group" class="btn-group">
+                        <button class="reward-filter-btn active">로딩 중...</button>
+                    </div>
+                </div>
+
+                <!-- 3-2. 획득처 필터 칸 (우측 50% 신설) -->
+                <div class="filter-half-column">
+                    <div class="filter-title">🗺️ 획득처 필터</div>
+                    <div id="condition-category-group" class="btn-group">
+                        <!-- app.js가 시트 E열 원본 문자열을 추려 동적 생성하는 영역 -->
+                        <button class="condition-filter-btn active">로딩 중...</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -430,7 +456,6 @@
         <style>
             .table-responsive {
                 overflow-x: auto;
-                /* 스크린샷과 동일한 진한 블랙 카드 배경 및 둥근 모서리 구현 */
                 background-color: #1a1a1a;
                 border: 1px solid #2a2a2a;
                 border-radius: 8px;
@@ -442,14 +467,12 @@
             .item-table {
                 width: 100%;
                 border-collapse: collapse;
-                /* 정밀 전체 중앙 정렬 원칙 설정 */
                 text-align: center;
                 font-size: 0.95rem;
                 background-color: #1a1a1a;
             }
 
             .item-table th {
-                /* 스크린샷의 짙은 블랙 헤더 색상 매칭 */
                 background-color: #151515;
                 color: #aaaaaa;
                 padding: 14px 16px;
@@ -466,15 +489,13 @@
                 color: #e0e0e0;
             }
 
-            /* [초정밀 황금 비율 너비 설정 적용] */
-            .col-no { width: 5%; color: #888888; }
-            .col-check { width: 6%; }
-            .col-icon { width: 8%; }
+            /* 🌟 [초정밀 8개 컬럼 확장 테이블 너비 가독성 최적 배분] */
+            .col-no { width: 4%; color: #888888; }
+            .col-check { width: 5%; }
+            .col-icon { width: 6%; }
+            .col-name { width: 24%; font-weight: bold; color: #ffffff; }
             
-            /* [이름] 과도하지 않은 최적의 28% 영역 및 굵은 글씨 지정 */
-            .col-name { width: 28%; font-weight: bold; color: #ffffff; }
-            
-            /* [패치] 7.58 규격 맞춤 최소 타이트 고정 및 줄바꿈 원천 차단 */
+            /* [패치] 최소폭 고정 원칙 준수 */
             .col-cond { 
                 width: 1%; 
                 white-space: nowrap; 
@@ -484,40 +505,38 @@
                 color: #93c5fd; 
             }
             
-            /* [획득처] 넉넉하고 시원한 42% 면적 고정 */
-            .col-score { width: 42%; color: #cccccc; }
-            
+            /* 분할된 두 영역의 공간 균형 밸런싱 마감 */
+            .col-type { width: 14%; font-weight: bold; } /* 획득처 열 */
+            .col-score { width: 36%; color: #cccccc; }  /* 조건 열 */
             .col-rw-type { width: 10%; }
 
-            /* 체크박스 인게임 스타일 스케일 및 색상 싱크 */
             .item-table input[type="checkbox"] {
                 width: 18px;
                 height: 18px;
                 cursor: pointer;
-                accent-color: #ff9f1c; /* 체크 시 포인트 오렌지 컬러 발색 */
+                accent-color: #ff9f1c;
             }
 
-            /* 획득 완료 처리 행 상태 연출 (완료 시 텍스트 어둡게 처리) */
+            /* 획득 완료 처리 행 상태 연출 */
             .item-table tr.completed {
                 background-color: rgba(255, 255, 255, 0.01);
             }
             .item-table tr.completed td {
-                color: #444444 !important; /* 완료 항목은 눈에 띄지 않게 어둡게 톤 다운 */
+                color: #444444 !important;
             }
             .item-table tr.completed .col-name {
-                text-decoration: line-through; /* 취소선 추가 */
+                text-decoration: line-through;
                 color: #444444 !important;
             }
             .item-table tr.completed .col-cond {
                 color: #444444 !important;
             }
 
-            /* 은은한 로우 호버 효과 */
             .item-table tr:hover {
                 background-color: rgba(255, 255, 255, 0.01);
             }
 
-            /* 🔝 플로팅 TOP 버튼 컴포넌트 (스크린샷 감성 사각형 모서리 가공) */
+            /* 플로팅 TOP 버튼 컴포넌트 */
             .top-scroll-btn {
                 position: fixed;
                 bottom: 30px;
@@ -550,7 +569,7 @@
             }
         </style>
 
-        <!-- 6개 도감 컬럼 스키마 반영 메인 테이블 피드 -->
+        <!-- 8개 도감 컬럼 스키마 반영 메인 테이블 피드 -->
         <div class="table-responsive">
             <table class="item-table">
                 <thead>
@@ -561,12 +580,13 @@
                         <th>이름</th>
                         <th>패치</th>
                         <th>획득처</th>
+                        <th>조건</th>
                         <th style="text-align: center;">장게 거래</th>
                     </tr>
                 </thead>
                 <tbody id="achievement-list">
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 50px; color: var(--text-muted);">
+                        <td colspan="8" style="text-align: center; padding: 50px; color: var(--text-muted);">
                             데이터베이스를 연동하는 중입니다...
                         </td>
                     </tr>
@@ -575,12 +595,11 @@
         </div>
     </div>
 
-    <!-- 🔝 플로팅 TOP 버튼 엘리먼트 -->
+    <!-- 플로팅 TOP 버튼 엘리먼트 -->
     <button id="topBtn" class="top-scroll-btn" onclick="scrollToTop()">▲</button>
 
-    <!-- 🌓 테마 전환 및 스크롤 감지 내장 인라인 인터페이스 스크립트 -->
+    <!-- 테마 전환 및 스크롤 감지 내장 인라인 인터페이스 스크립트 -->
     <script>
-        // 페이지 로드 시 기존 세이브된 테마값 조회 및 선반영
         const savedTheme = localStorage.getItem('theme_mode') || 'dark';
         if (savedTheme === 'light') {
             document.body.classList.add('light-mode');
@@ -588,7 +607,6 @@
             document.getElementById('theme-text').textContent = '라이트 모드';
         }
 
-        // 다크 ↔ 라이트 스위칭 핸들러
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
@@ -607,7 +625,6 @@
             }
         }
 
-        // TOP 버튼 스크롤 감지 토글 프로토콜
         const topBtn = document.getElementById("topBtn");
         window.onscroll = function() {
             if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
@@ -617,12 +634,8 @@
             }
         };
 
-        // 최상단 스무스 부드러운 스크롤 이동
         function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 
