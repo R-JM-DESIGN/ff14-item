@@ -206,24 +206,16 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    if (type !== 'ALL' || currentOriginFilter !== 'ALL') {
-        clearCommonBaseFilters();
-        updatePathDisplay();
-    } else {
-        restoreDefaultCategory();
-    }
+    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
+    updatePathDisplay();
     renderList(); 
 }
 
 function handleOriginDropdownChange(selectElement) {
     currentOriginFilter = selectElement.value;
 
-    if (currentOriginFilter !== 'ALL' || currentRewardFilter !== 'ALL') {
-        clearCommonBaseFilters();
-        updatePathDisplay();
-    } else {
-        restoreDefaultCategory();
-    }
+    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
+    updatePathDisplay();
     renderList();
 }
 
@@ -231,13 +223,9 @@ function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
     currentOriginFilter = 'ALL';
-    resetOriginDropdownUI();
+    resetOriginDropdownUI(); // 드롭다운 레이아웃만 ALL 위치로 팅겨줌
     
-    if (currentRewardFilter === 'ALL') {
-        restoreDefaultCategory();
-    } else {
-        updatePathDisplay();
-    }
+    updatePathDisplay();
     renderList();
 }
 
@@ -281,13 +269,17 @@ function updatePathDisplay() {
     const display = document.getElementById('current-path-display');
     if (!display) return;
 
-    if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-        display.textContent = `📂 분류 : ${currentMain || '전체 목록'}`;
+    // ✨ [직관성 격상] 어떤 필터를 켜더라도 유저가 현재 '감정표현'인지 '탈것'인지 인지할 수 있게 베이스 카테고리를 항상 선두에 인쇄합니다.
+    let basePathText = `📂 분류 : ${currentMain || '전체 목록'}`;
+    let texts = [];
+    
+    if (currentRewardFilter !== 'ALL') texts.push(`⚖️ 거래 여부 : ${currentRewardFilter}`);
+    if (currentOriginFilter !== 'ALL') texts.push(`🗺️ 획득처 : ${currentOriginFilter}`);
+    
+    if (texts.length > 0) {
+        display.textContent = `${basePathText} ➡️ ⛓️ [복합 필터 가동중] ${texts.join(' ➕ ')}`;
     } else {
-        let texts = [];
-        if (currentRewardFilter !== 'ALL') texts.push(`⚖️ 거래 여부 : ${currentRewardFilter}`);
-        if (currentOriginFilter !== 'ALL') texts.push(`🗺️ 획득처 : ${currentOriginFilter}`);
-        display.textContent = `⛓️ [복합 필터 가동중] ${texts.join(' ➕ ')}`;
+        display.textContent = basePathText;
     }
 }
 
@@ -326,6 +318,7 @@ function getRewardColor(type) {
 // 사용자가 설정한 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열만 완벽하게 정제해 내는 마스터 팩토리 함수
 function getCurrentFilteredItems() {
     return rawData.filter(item => {
+        // [우선순위] 통합 검색 모드일 때만 카테고리 장벽을 깨부수고 전체 전수 매칭을 허용합니다.
         if (currentSearchQuery) {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
@@ -334,13 +327,16 @@ function getCurrentFilteredItems() {
                    item.rewardType.toLowerCase().includes(currentSearchQuery);
         }
         
-        if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
-            if (item.main !== currentMain) return false;
-        }
+        // ✨ [핵심 보정] 카테고리(대분류) 선택이 살아있다면, 소속 대분류가 다를 시 최우선 탈락 컷 처리합니다.
+        if (currentMain && item.main !== currentMain) return false;
+        
+        // 거래 가능 여부 상호 연동 조건 스크리닝 검증
         if (currentRewardFilter !== 'ALL') {
             if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
             if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
         }
+        
+        // 획득처 드롭다운 장소 일치 교차 검증
         if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
         
         return true;
