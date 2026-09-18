@@ -47,7 +47,6 @@ async function fetchData() {
             const itemName = getVal(2); // C열: 이름
             const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 0.0;
 
-            // 순정 데이터 연산 구조 훼손 없이 Key 명칭 보존 처리
             return {
                 id: itemName,           
                 main: getVal(0),        // A열: 카테고리 선택
@@ -195,6 +194,7 @@ function initOriginDropdown() {
     });
 }
 
+// 개별 필터 처리 매커니즘 라인
 function selectRewardFilter(type, btn) {
     if (type !== 'ALL' && currentRewardFilter === type) {
         const allBtn = document.getElementById('rw-btn-all');
@@ -205,15 +205,12 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList(); 
 }
 
 function handleOriginDropdownChange(selectElement) {
     currentOriginFilter = selectElement.value;
-
-    // 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList();
 }
@@ -222,7 +219,7 @@ function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
     currentOriginFilter = 'ALL';
-    resetOriginDropdownUI(); // 드롭다운 레이아웃만 ALL 위치로 팅겨줌
+    resetOriginDropdownUI(); 
     
     updatePathDisplay();
     renderList();
@@ -251,6 +248,7 @@ function clearCommonBaseFilters() {
     }
 }
 
+// 기본 안내판 가이드 컴포넌트 라인
 function restoreDefaultCategory() {
     if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
         const activeMainBtn = document.querySelector('#main-category-group button.active');
@@ -301,7 +299,6 @@ function isTradeable(rawType) {
     return txt === 'O' || txt === 'Y' || txt.includes('가능');
 }
 
-// 라이트모드 듀얼 모드 전환 시 색상이 무너지지 않도록 명도 색상 배정 가이드 유지
 function isNotTradeable(rawType) {
     if (!rawType) return false;
     const txt = String(rawType).trim().toUpperCase();
@@ -376,6 +373,7 @@ function renderList() {
         if (isTradeable(item.rewardType)) tableTradeText = '거래 가능';
         else if (isNotTradeable(item.rewardType)) tableTradeText = '거래 불가';
 
+        // 1. 이름 항목 소괄호 개행 분리 로직 (순정 상태 유지)
         let displayName = item.name;
         if (item.name && item.name.includes('(')) {
             const bracketCount = (item.name.match(/\(/g) || []).length;
@@ -393,7 +391,18 @@ function renderList() {
             }
         }
 
-        // 🎯 [수선 포인트 완료] 7번째 열 마크업 클래스명을 시각 가이드라인과 매칭되도록 col-way로 고도화합니다.
+        // 🌟 [2. 조건 항목 대괄호 개행 및 크기 축소 알고리즘 추가 주입]
+        let formattedCondition = item.condition || '-';
+        if (formattedCondition.includes('[')) {
+            const bracketIndex = formattedCondition.indexOf('[');
+            const frontText = formattedCondition.substring(0, bracketIndex).trim(); // 대괄호 앞 본문
+            const bracketText = formattedCondition.substring(bracketIndex).trim();  // [ 포함 뒷부분 전체
+            
+            // 대괄호 앞에서 강제 엔터(<br>)를 치고, 대괄호 영역의 글자 크기를 컴팩트하게 0.85em으로 스케일 다운합니다.
+            formattedCondition = `${frontText}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 3px;">${bracketText}</span>`;
+        }
+
+        // 🎯 [명칭 매핑 수선] 가독성 일치 조치를 위해 클래스 이름을 col-way로 고도화하여 조립 바인딩합니다.
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
@@ -401,7 +410,7 @@ function renderList() {
             <td class="col-name">${displayName}</td>
             <td class="col-cond">${item.patch}</td>
             <td class="col-type" style="color: #ff9f1c; font-weight: bold;">${item.originPlace || '-'}</td>
-            <td class="col-way">${item.condition || '-'}</td> 
+            <td class="col-way">${formattedCondition}</td> 
             <td class="col-rw-type" style="color: ${textColor}; font-weight: bold;">${tableTradeText}</td>
         `;
         listBody.appendChild(tr);
@@ -476,7 +485,6 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 🌟 [순서 제어 프로미스 구조] 비동기 다운로드 완결 확인 후 자동 실행 순차 매핑 가동
 fetchData().then(() => {
     updatePathDisplay();
     renderList();
