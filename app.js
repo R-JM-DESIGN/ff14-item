@@ -47,6 +47,7 @@ async function fetchData() {
             const itemName = getVal(2); // C열: 이름
             const parsedPatchNum = parseFloat(getVal(3).replace(/[^0-9.]/g, '')) || 0.0;
 
+            // 순정 데이터 연산 구조 훼손 없이 Key 명칭 보존 처리
             return {
                 id: itemName,           
                 main: getVal(0),        // A열: 카테고리 선택
@@ -75,7 +76,6 @@ async function fetchData() {
             </td></tr>`;
     }
 }
-
 // 2. 검색 인터페이스 인풋 핸들러
 function handleSearchInput() {
     const inputElement = document.getElementById('search-keyword');
@@ -125,7 +125,6 @@ function selectSortOrder(order) {
     
     renderList();
 }
-
 // 카테고리 선택(A열 분류) 동적 HTML 노드 버튼 빌더
 function initMenu() {
     const mains = [...new Set(rawData.map(item => item.main))].filter(Boolean);
@@ -206,7 +205,7 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
+    // 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList(); 
 }
@@ -214,7 +213,7 @@ function selectRewardFilter(type, btn) {
 function handleOriginDropdownChange(selectElement) {
     currentOriginFilter = selectElement.value;
 
-    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
+    // 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList();
 }
@@ -269,7 +268,6 @@ function updatePathDisplay() {
     const display = document.getElementById('current-path-display');
     if (!display) return;
 
-    // ✨ [직관성 격상] 어떤 필터를 켜더라도 유저가 현재 '감정표현'인지 '탈것'인지 인지할 수 있게 베이스 카테고리를 항상 선두에 인쇄합니다.
     let basePathText = `📂 분류 : ${currentMain || '전체 목록'}`;
     let texts = [];
     
@@ -303,6 +301,7 @@ function isTradeable(rawType) {
     return txt === 'O' || txt === 'Y' || txt.includes('가능');
 }
 
+// 라이트모드 듀얼 모드 전환 시 색상이 무너지지 않도록 명도 색상 배정 가이드 유지
 function isNotTradeable(rawType) {
     if (!rawType) return false;
     const txt = String(rawType).trim().toUpperCase();
@@ -315,10 +314,8 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 사용자가 설정한 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열만 완벽하게 정제해 내는 마스터 팩토리 함수
 function getCurrentFilteredItems() {
     return rawData.filter(item => {
-        // [우선순위] 통합 검색 모드일 때만 카테고리 장벽을 깨부수고 전체 전수 매칭을 허용합니다.
         if (currentSearchQuery) {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
@@ -327,16 +324,13 @@ function getCurrentFilteredItems() {
                    item.rewardType.toLowerCase().includes(currentSearchQuery);
         }
         
-        // ✨ [핵심 보정] 카테고리(대분류) 선택이 살아있다면, 소속 대분류가 다를 시 최우선 탈락 컷 처리합니다.
         if (currentMain && item.main !== currentMain) return false;
         
-        // 거래 가능 여부 상호 연동 조건 스크리닝 검증
         if (currentRewardFilter !== 'ALL') {
             if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
             if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
         }
         
-        // 획득처 드롭다운 장소 일치 교차 검증
         if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
         
         return true;
@@ -399,6 +393,7 @@ function renderList() {
             }
         }
 
+        // 🎯 [수선 포인트 완료] 7번째 열 마크업 클래스명을 시각 가이드라인과 매칭되도록 col-way로 고도화합니다.
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
@@ -406,7 +401,7 @@ function renderList() {
             <td class="col-name">${displayName}</td>
             <td class="col-cond">${item.patch}</td>
             <td class="col-type" style="color: #ff9f1c; font-weight: bold;">${item.originPlace || '-'}</td>
-            <td class="col-score">${item.condition || '-'}</td>
+            <td class="col-way">${item.condition || '-'}</td> 
             <td class="col-rw-type" style="color: ${textColor}; font-weight: bold;">${tableTradeText}</td>
         `;
         listBody.appendChild(tr);
@@ -461,8 +456,6 @@ function calculateChapterProgress(currentItems) {
         }
     }
 
-    // 🌟 [순서 버그 격파 2단계 완결]
-    // 비동기 첫 로딩 시점에는 리스트가 아직 다 그려지기 전이므로, rawData 기반으로 현재 활성화된 카테고리의 갯수를 강제 실시간 추적 추산하여 0개 고정 현상을 원천 방쇄합니다.
     let exactTotal = total;
     if (exactTotal === 0 && currentMain && !currentSearchQuery && currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
         exactTotal = rawData.filter(item => item.main === currentMain).length;
@@ -483,7 +476,7 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 🌟 [순서 버그 격파 3단계] 원본을 안정적으로 순차 기동시킵니다.
+// 🌟 [순서 제어 프로미스 구조] 비동기 다운로드 완결 확인 후 자동 실행 순차 매핑 가동
 fetchData().then(() => {
     updatePathDisplay();
     renderList();
