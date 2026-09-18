@@ -206,15 +206,12 @@ function selectRewardFilter(type, btn) {
     document.querySelectorAll('.reward-filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList(); 
 }
 
 function handleOriginDropdownChange(selectElement) {
     currentOriginFilter = selectElement.value;
-
-    // ✨ 카테고리를 지우지 않고 패스 안내판과 리스트만 실시간 고속 연산 처리합니다.
     updatePathDisplay();
     renderList();
 }
@@ -223,7 +220,7 @@ function clearOriginDropdownFilter() {
     if (currentOriginFilter === 'ALL') return;
     
     currentOriginFilter = 'ALL';
-    resetOriginDropdownUI(); // 드롭다운 레이아웃만 ALL 위치로 팅겨줌
+    resetOriginDropdownUI(); 
     
     updatePathDisplay();
     renderList();
@@ -245,6 +242,7 @@ function clearSearchInputFilter() {
     renderList();
 }
 
+// 공통 베이스 필터 초기화
 function clearCommonBaseFilters() {
     if (currentRewardFilter !== 'ALL' || currentOriginFilter !== 'ALL') {
         currentMain = ''; 
@@ -252,6 +250,7 @@ function clearCommonBaseFilters() {
     }
 }
 
+// 기본 카테고리 복원
 function restoreDefaultCategory() {
     if (currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
         const activeMainBtn = document.querySelector('#main-category-group button.active');
@@ -265,11 +264,11 @@ function restoreDefaultCategory() {
     }
 }
 
+// 경로 디스플레이 업데이트
 function updatePathDisplay() {
     const display = document.getElementById('current-path-display');
     if (!display) return;
 
-    // ✨ [직관성 격상] 어떤 필터를 켜더라도 유저가 현재 '감정표현'인지 '탈것'인지 인지할 수 있게 베이스 카테고리를 항상 선두에 인쇄합니다.
     let basePathText = `📂 분류 : ${currentMain || '전체 목록'}`;
     let texts = [];
     
@@ -315,10 +314,9 @@ function getRewardColor(type) {
     return '#888888'; 
 }
 
-// 사용자가 설정한 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열만 완벽하게 정제해 내는 마스터 팩토리 함수
+// 다중 복합 필터 조건식에 부합하는 현재 타겟 아이템 배열 정제 마스터 함수
 function getCurrentFilteredItems() {
     return rawData.filter(item => {
-        // [우선순위] 통합 검색 모드일 때만 카테고리 장벽을 깨부수고 전체 전수 매칭을 허용합니다.
         if (currentSearchQuery) {
             return item.name.toLowerCase().includes(currentSearchQuery) || 
                    item.patch.toLowerCase().includes(currentSearchQuery) || 
@@ -327,22 +325,20 @@ function getCurrentFilteredItems() {
                    item.rewardType.toLowerCase().includes(currentSearchQuery);
         }
         
-        // ✨ [핵심 보정] 카테고리(대분류) 선택이 살아있다면, 소속 대분류가 다를 시 최우선 탈락 컷 처리합니다.
         if (currentMain && item.main !== currentMain) return false;
         
-        // 거래 가능 여부 상호 연동 조건 스크리닝 검증
         if (currentRewardFilter !== 'ALL') {
             if (currentRewardFilter === '거래 가능' && !isTradeable(item.rewardType)) return false;
             if (currentRewardFilter === '거래 불가' && !isNotTradeable(item.rewardType)) return false;
         }
         
-        // 획득처 드롭다운 장소 일치 교차 검증
         if (currentOriginFilter !== 'ALL' && item.originPlace !== currentOriginFilter) return false;
         
         return true;
     });
 }
 
+// 리스트 실시간 동적 렌더링 엔진
 function renderList() {
     const listBody = document.getElementById('achievement-list');
     listBody.innerHTML = '';
@@ -399,6 +395,15 @@ function renderList() {
             }
         }
 
+        // 🌟 [획득 방법 문자열 변환 및 커스텀 정렬 가공부 적용]
+        let displayCondition = item.condition || '-';
+        if (item.condition && item.condition.includes('[')) {
+            const parts = item.condition.split('[');
+            const beforeBracket = parts[0] ? parts[0].trim() : '';
+            const afterBracket = parts.slice(1).join('[').trim();
+            displayCondition = `${beforeBracket}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">[${afterBracket}</span>`;
+        }
+
         tr.innerHTML = `
             <td class="col-no">${idx + 1}</td> 
             <td class="col-check"><input type="checkbox" ${isChecked} onchange="toggleItem('${item.id}', this)"></td>
@@ -406,7 +411,7 @@ function renderList() {
             <td class="col-name">${displayName}</td>
             <td class="col-cond">${item.patch}</td>
             <td class="col-type" style="color: #ff9f1c; font-weight: bold;">${item.originPlace || '-'}</td>
-            <td class="col-score">${item.condition || '-'}</td>
+            <td class="col-score" style="text-align: left; padding-left: 12px;">${displayCondition}</td>
             <td class="col-rw-type" style="color: ${textColor}; font-weight: bold;">${tableTradeText}</td>
         `;
         listBody.appendChild(tr);
@@ -414,6 +419,9 @@ function renderList() {
     
     calculateChapterProgress(getCurrentFilteredItems());
 }
+// =========================================================================
+// app.js - Part 4 (체크 상태 제어 및 진척도 실시간 연산 인터페이스)
+// =========================================================================
 
 function toggleItem(id, checkbox) {
     const row = checkbox.closest('tr');
@@ -462,7 +470,6 @@ function calculateChapterProgress(currentItems) {
     }
 
     // 🌟 [순서 버그 격파 2단계 완결]
-    // 비동기 첫 로딩 시점에는 리스트가 아직 다 그려지기 전이므로, rawData 기반으로 현재 활성화된 카테고리의 갯수를 강제 실시간 추적 추산하여 0개 고정 현상을 원천 방쇄합니다.
     let exactTotal = total;
     if (exactTotal === 0 && currentMain && !currentSearchQuery && currentRewardFilter === 'ALL' && currentOriginFilter === 'ALL') {
         exactTotal = rawData.filter(item => item.main === currentMain).length;
@@ -483,7 +490,7 @@ function calculateChapterProgress(currentItems) {
     document.getElementById('chapter-bar').style.width = `${percent}%`;
 }
 
-// 🌟 [순서 버그 격파 3단계] 원본을 안정적으로 순차 기동시킵니다.
+// 🌟 [순서 버그 격파 3단계] 원본 인프라 안정 구동부 기동
 fetchData().then(() => {
     updatePathDisplay();
     renderList();
