@@ -355,7 +355,7 @@ function renderList() {
         if (currentSortOrder === 'ASC') return a.patchValue - b.patchValue;
         if (currentSortOrder === 'DESC') return b.patchValue - a.patchValue;
         if (currentSortOrder === 'ORIGIN_ASC') return (a.originPlace || '').localeCompare(b.originPlace || '', 'ko');
-        if (currentSortOrder === 'ORIGIN_DESC') return (b.originPlace || '').localeCompare(b.originPlace || '', 'ko');
+        if (currentSortOrder === 'ORIGIN_DESC') return (b.originPlace || '').localeCompare(a.originPlace || '', 'ko');
         return 0;
     });
 
@@ -374,7 +374,7 @@ function renderList() {
         const originalIconUrl = item.icon ? item.icon.trim() : '';
         const iconTag = originalIconUrl ? `<img src="${originalIconUrl}" referrerpolicy="no-referrer" alt="아이콘" style="width: 32px; height: 32px; object-fit: contain; vertical-align: middle; border-radius: 4px;">` : '';
 
-        // ✨ 이 부분에서 표에 인쇄될 글자를 O 또는 X로 매핑합니다.
+        // 표에 인쇄될 글자를 O 또는 X로 매핑
         let tableTradeText = item.rewardType || '-';
         if (isTradeable(item.rewardType)) tableTradeText = 'O';
         else if (isNotTradeable(item.rewardType)) tableTradeText = 'X';
@@ -390,16 +390,17 @@ function renderList() {
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">${subTitle}</span>`;
             } else {
                 const parts = item.name.split('(');
-                const mainTitle = parts ? parts.trim() : ''; 
+                const mainTitle = parts[0] ? parts[0].trim() : ''; 
                 const subTitle = parts.slice(1).join('(').trim();
                 displayName = `${mainTitle}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">(${subTitle}</span>`;
             }
         }
 
+        // 🛠️ [버그 수정 완료] parts[0] 배열 인덱스를 명시하여 정상적으로 문자열 trim을 수행합니다.
         let displayCondition = item.condition || '-';
         if (item.condition && item.condition.includes('[')) {
             const parts = item.condition.split('[');
-            const beforeBracket = parts ? parts.trim() : '';
+            const beforeBracket = parts[0] ? parts[0].trim() : '';
             const afterBracket = parts.slice(1).join('[').trim();
             displayCondition = `${beforeBracket}<br><span style="display: block; font-size: 0.85em; color: var(--text-muted); font-weight: normal; margin-top: 2px;">[${afterBracket}</span>`;
         }
@@ -419,6 +420,7 @@ function renderList() {
     
     calculateChapterProgress(getCurrentFilteredItems());
 }
+
 // =========================================================================
 // app.js - Part 4 (체크 상태 제어 및 진척도 실시간 연산 인터페이스)
 // =========================================================================
