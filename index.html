@@ -23,6 +23,10 @@
             --table-header: #151515;        /* 테이블 헤더 전용 다크 그레이 */
             --path-bg: #1f1f1f;
             --path-text: #ffffff;
+            
+            /* 📌 푸터 전용 변수 (다크 모드 기본) */
+            --footer-text: #4a4a4a;
+            --footer-border: #222222;
         }
 
         /* ☀️ 라이트 모드 변수 대응 */
@@ -39,6 +43,10 @@
             --table-header: #f1f3f5;
             --path-bg: #e9ecef;
             --path-text: #495057;
+            
+            /* 📌 푸터 전용 변수 (라이트 모드 스위칭) */
+            --footer-text: #94a3b8;
+            --footer-border: #e9ecef;
         }
 
         body {
@@ -135,14 +143,6 @@
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- 우측 상단 테마 토글 스위치 행 -->
-        <div class="top-header-row">
-            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()">
-                <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
-            </button>
-        </div>
         <!-- 🌟 [게이지바 마스터 박스 부활 유지] 두 번째 스크린샷과 100% 완벽 일치하도록 그리드와 컴포넌트 고정 -->
         <style>
             .dashboard-grid {
@@ -207,45 +207,8 @@
             #chapter-bar {
                 background: linear-gradient(90deg, #06b6d4, #10b981);
             }
-        </style>
 
-        <div class="master-dashboard-box">
-            <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
-            <div class="info-title">💡 이용 안내</div>
-            <ul class="info-list">
-                <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
-                <li>개인 브라우저에 저장되는 도감 시스템입니다. 캐시 삭제 시 데이터가 초기화될 수 있습니다.</li>
-                <li>문의 사항은 질문방을 이용해 주시기 바랍니다.</li>
-            </ul>
-        </div>
-
-        <!-- 🌟 가로형 대시보드 및 실시간 연동 텍스트 일체화 구조 원본 보존 고정 -->
-        <div class="dashboard-grid">
-            <div class="dashboard-item">
-                <div class="metric-header">
-                    <span class="metric-title">전체 달성도: <span id="total-percent" style="color: var(--accent-orange);">0%</span></span>
-                    <span id="total-count" class="metric-value">(0/0)</span>
-                </div>
-                <div class="progress-container">
-                    <div id="total-bar" class="progress-bar"></div>
-                </div>
-            </div>
-
-            <div class="dashboard-item">
-                <div class="metric-header">
-                    <span class="metric-title"><span id="chapter-title-label">현재 분류 달성도</span>: <span id="chapter-percent" style="color: #10b981;">0%</span></span>
-                    <span id="chapter-count" class="metric-value">(0/0)</span>
-                </div>
-                <div class="progress-container">
-                    <div id="chapter-bar" class="progress-bar"></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="display:none;"><span id="score-total">0</span><span id="score-max">0</span><div id="score-bar"></div></div>
-
-        <!-- 🔍 통합 검색 영역 (이전 고유 패딩 크기 + 가로 너비 100% 밀착 동기화) -->
-        <style>
+            /* 🔍 통합 검색 영역 (이전 고유 패딩 크기 + 가로 너비 100% 밀착 동기화) */
             .search-section {
                 background-color: var(--card-bg);
                 border: 1px solid var(--border-color);
@@ -282,19 +245,8 @@
                 outline: none;
                 border-color: var(--accent-orange);
             }
-        </style>
-        
-        <div class="search-section">
-            <label class="search-label" for="search-keyword">🔍 아이템 통합 검색</label>
-            <div class="search-input-wrapper">
-                <div class="search-control-group">
-                    <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
-                    <button id="clear-search-btn" class="clear-action-btn" onclick="clearSearchInputFilter()">초기화</button>
-                </div>
-            </div>
-        </div>
-        <!-- 필터 행 제어 전용 인터페이스 스타일 구조 정의 -->
-        <style>
+
+            /* 필터 행 제어 전용 인터페이스 스타일 구조 정의 */
             .filter-section {
                 display: flex;
                 flex-direction: column;
@@ -438,75 +390,14 @@
             .path-display-box {
                 background-color: var(--path-bg);
                 border-left: 4px solid var(--accent-orange);
-                padding: 12px 18px;
-                border-radius: 4px;
-                font-weight: 600;
-                font-size: 0.95rem;
-                margin-bottom: 35px; /* 기존 20px ➡️ 35px 확장하여 하단 메인 표 테이블과 숨통 트이는 정간격을 구현했습니다. */
                 color: var(--path-text);
-                transition: background-color 0.3s, color 0.3s;
+                padding: 12px 16px;
+                border-radius: 6px;
+                font-size: 0.9rem;
+                font-weight: 700;
+                margin-bottom: 25px;
             }
         </style>
-
-        <div class="filter-section">
-            <div class="filter-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                <div>
-                    <div class="filter-title">✔ 아이템 획득 상태 필터</div>
-                    <div class="btn-group">
-                        <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
-                        <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
-                        <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div>
-                        <div class="filter-title">🔢 패치 버전 정렬</div>
-                        <div class="btn-group">
-                            <button id="sort-asc" class="sort-filter-btn" onclick="selectSortOrder('ASC')">패치 낮은순 ▲</button>
-                            <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="filter-title">🔤 획득처 이름 정렬</div>
-                        <div class="btn-group">
-                            <button id="sort-origin-asc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_ASC')">획득처 이름순 ▲</button>
-                            <button id="sort-origin-desc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_DESC')">획득처 역순 ▼</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="filter-row">
-                <div class="filter-title">📁 카테고리 선택</div>
-                <div id="main-category-group" class="btn-group">
-                    <button class="active">로딩 중...</button>
-                </div>
-            </div>
-
-            <div style="display: none;" id="sub-category-group"></div>
-
-            <div class="filter-split-row">
-                <div class="filter-half-column">
-                    <div class="filter-title">⚖️ 거래 여부</div>
-                    <div id="reward-category-group" class="btn-group">
-                        <button class="reward-filter-btn active">로딩 중...</button>
-                    </div>
-                </div>
-                <div class="filter-half-column">
-                    <div class="filter-title">🗺️ 획득처 필터</div>
-                    <div class="dropdown-control-group">
-                        <select id="condition-dropdown-filter" class="filter-dropdown" onchange="handleOriginDropdownChange(this)">
-                            <option value="ALL">전체 보기 (필터 해제)</option>
-                        </select>
-                        <button id="clear-origin-btn" class="clear-action-btn" onclick="clearOriginDropdownFilter()">초기화</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="current-path-display" class="path-display-box">
-            데이터를 로드하고 있습니다...
-        </div>
         <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
         <style>
             .table-responsive {
@@ -515,7 +406,7 @@
                 border: 1px solid var(--border-color); 
                 border-radius: 8px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 60px;
+                margin-bottom: 30px;
                 padding: 10px;
                 transition: background-color 0.3s, border-color 0.3s;
             }
@@ -649,8 +540,141 @@
                 border-color: var(--accent-orange);
                 color: var(--accent-orange);
             }
-        </style>
 
+            /* 📌 [신설] 보내주신 이미지 스펙 맞춤 카피라이트 푸터 CSS */
+            footer {
+                text-align: center;             /* 정중앙 정렬 */
+                padding: 40px 20px;             /* 상하 좌우 내부 여백 */
+                margin-top: 50px;               /* 테이블과의 이격 수직 공백 */
+                font-size: 0.75rem;             /* 정돈된 아주 작은 글씨 */
+                color: var(--footer-text);      /* 이미지처럼 눈에 덜 띄는 흐린 회색조 */
+                line-height: 1.6;               /* 줄간격 가독성 스케일 */
+                border-top: 1px solid var(--footer-border); /* 은은한 상단 연성 마크 라인 */
+                transition: all 0.3s ease;
+            }
+
+            footer div {
+                margin-bottom: 2px;             /* 저작권 다단 간격 미세 보정 */
+            }
+        </style>
+    </head>
+<body>
+    <div class="container">
+        <!-- 우측 상단 테마 토글 스위치 행 -->
+        <div class="top-header-row">
+            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()">
+                <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
+            </button>
+        </div>
+
+        <div class="master-dashboard-box">
+            <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
+            <div class="info-title">💡 이용 안내</div>
+            <ul class="info-list">
+                <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
+                <li>개인 브라우저에 저장되는 도감 시스템입니다. 캐시 삭제 시 데이터가 초기화될 수 있습니다.</li>
+                <li>문의 사항은 질문방을 이용해 주시기 바랍니다.</li>
+            </ul>
+        </div>
+
+        <!-- 가로형 대시보드 및 실시간 연동 텍스트 일체화 구조 원본 보존 고정 -->
+        <div class="dashboard-grid">
+            <div class="dashboard-item">
+                <div class="metric-header">
+                    <span class="metric-title">전체 달성도: <span id="total-percent" style="color: var(--accent-orange);">0%</span></span>
+                    <span id="total-count" class="metric-value">(0/0)</span>
+                </div>
+                <div class="progress-container">
+                    <div id="total-bar" class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="dashboard-item">
+                <div class="metric-header">
+                    <span class="metric-title"><span id="chapter-title-label">현재 분류 달성도</span>: <span id="chapter-percent" style="color: #10b981;">0%</span></span>
+                    <span id="chapter-count" class="metric-value">(0/0)</span>
+                </div>
+                <div class="progress-container">
+                    <div id="chapter-bar" class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:none;"><span id="score-total">0</span><span id="score-max">0</span><div id="score-bar"></div></div>
+
+        <!-- 🔍 통합 검색 영역 -->
+        <div class="search-section">
+            <label class="search-label" for="search-keyword">🔍 아이템 통합 검색</label>
+            <div class="search-input-wrapper">
+                <div class="search-control-group">
+                    <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
+                    <button id="clear-search-btn" class="clear-action-btn" onclick="clearSearchInputFilter()">초기화</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 필터 섹션 세트 영역 -->
+        <div class="filter-section">
+            <div class="filter-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <div class="filter-title">✔ 아이템 획득 상태 필터</div>
+                    <div class="btn-group">
+                        <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
+                        <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
+                        <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div>
+                        <div class="filter-title">🔢 패치 버전 정렬</div>
+                        <div class="btn-group">
+                            <button id="sort-asc" class="sort-filter-btn" onclick="selectSortOrder('ASC')">패치 낮은순 ▲</button>
+                            <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="filter-title">🔤 획득처 이름 정렬</div>
+                        <div class="btn-group">
+                            <button id="sort-origin-asc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_ASC')">획득처 이름순 ▲</button>
+                            <button id="sort-origin-desc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_DESC')">획득처 역순 ▼</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-title">📁 카테고리 선택</div>
+                <div id="main-category-group" class="btn-group">
+                    <button class="active">로딩 중...</button>
+                </div>
+            </div>
+
+            <div style="display: none;" id="sub-category-group"></div>
+
+            <div class="filter-split-row">
+                <div class="filter-half-column">
+                    <div class="filter-title">⚖️ 거래 여부</div>
+                    <div id="reward-category-group" class="btn-group">
+                        <button class="reward-filter-btn active">로딩 중...</button>
+                    </div>
+                </div>
+                <div class="filter-half-column">
+                    <div class="filter-title">🗺️ 획득처 필터</div>
+                    <div class="dropdown-control-group">
+                        <select id="condition-dropdown-filter" class="filter-dropdown" onchange="handleOriginDropdownChange(this)">
+                            <option value="ALL">전체 보기 (필터 해제)</option>
+                        </select>
+                        <button id="clear-origin-btn" class="clear-action-btn" onclick="clearOriginDropdownFilter()">초기화</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="current-path-display" class="path-display-box">
+            데이터를 로드하고 있습니다...
+        </div>
+
+        <!-- 테이블 인프라 구조 영역 -->
         <div class="table-responsive">
             <table class="item-table">
                 <thead>
@@ -674,6 +698,13 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 📌 [매핑완료] 보내주신 사진 속 폰트 밀도와 일치시킨 정중앙 저작권 푸터 마크업 -->
+        <footer>
+            <div>FF14 © KOR SQUARE ENIX Published in Korea by Actoz Soft CO., LTD.</div>
+            <div>FF14 © GLOBAL SQUARE ENIX CO., LTD. All Rights Reserved.</div>
+            <div>FF14 Item © 검력</div>
+        </footer>
     </div>
 
     <button id="topBtn" class="top-scroll-btn" onclick="scrollToTop()">▲</button>
