@@ -4,720 +4,455 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FF14 아이템 획득 체크리스트</title>
-    
-    <!-- 🌟 [신설] 전 세계 어떤 기기에서 접속하든 프리텐다드 고딕체를 100% 고정 송출해 주는 경량 웹폰트 링크 -->
-    <link rel="stylesheet" as="style" crossorigin href="https://jsdelivr.net" />
-    
-    <!-- 🎨 스크린샷과 100% 일치하는 넷플릭스 스타일 다크 톤앤매너 정의 -->
     <style>
+        /* 🎨 글로벌 CSS 테마 인프라 정의 (다크 모드 기본셋) */
         :root {
-            --bg-color: #121212;             /* 완전 어두운 메인 배경 */
-            --card-bg: #1a1a1a;             /* 카드 및 섹션용 짙은 회색 배경 */
-            --inner-card: #222222;          /* 내부 서브 박스 배경 */
-            --border-color: #2c2c2c;        /* 은은한 외곽 경계선 컬러 */
-            --text-main: #e0e0e0;           /* 메인 텍스트 기본 화이트 */
-            --text-muted: #aaaaaa;          /* 안내 문구용 그레이 */
-            --primary: #4ea8de;             /* 메인 블루 포인트 */
-            --primary-hover: #5bc0be;
-            --accent-orange: #ff9f1c;       /* 포인트 강조용 오렌지 컬러 */
-            --table-header: #151515;        /* 테이블 헤더 전용 다크 그레이 */
-            --path-bg: #1f1f1f;
-            --path-text: #ffffff;
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --border-color: #333333;
+            --primary-color: #4cc9f0;
+            --box-bg: #1a1a1a;
+            --item-hover: #262626;
+            --progress-empty: #2b2b2b;
+            --footer-text: #888888;
+            --footer-highlight: #aaaaaa;
+            --footer-border: #2d2d2d;
         }
 
-        /* ☀️ 라이트 모드 변수 대응 */
+        /* ☀️ 라이트 모드 전환 시 실시간 크로스 매핑되는 색상 테이블 */
         body.light-mode {
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --inner-card: #f1f3f5;
-            --border-color: #e9ecef;
-            --text-main: #212529;
-            --text-muted: #6c757d;
-            --primary: #0077b6;
-            --primary-hover: #0096c7;
-            --accent-orange: #d97706;
-            --table-header: #f1f3f5;
-            --path-bg: #e9ecef;
-            --path-text: #495057;
+            --bg-color: #f5f6f8;
+            --container-bg: #ffffff;
+            --text-color: #222222;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --primary-color: #0077b6;
+            --box-bg: #f8f9fa;
+            --item-hover: #f1f3f5;
+            --progress-empty: #e9ecef;
+            --footer-text: #999999;
+            --footer-highlight: #444444;
+            --footer-border: #e9ecef;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-main);
-            /* 🌟 불러온 프리텐다드 폰트의 이름을 명확하게 선언하여 매핑 마감했습니다. */
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            margin: 0;
+            color: var(--text-color);
+            font-family: 'Noto Sans KR', sans-serif;
             padding: 20px;
-            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.6;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         .container {
-            max-width: 1500px; /* 8개 컬럼 확장에 맞춘 시원한 대화면 배치 */
+            max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-        }
-
-        /* 🌓 최상단 한 줄 레이아웃 */
-        .top-header-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
-        }
-
-        .theme-toggle-btn {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.2s;
-        }
-
-        .theme-toggle-btn:hover {
-            border-color: var(--accent-orange);
-        }
-
-        /* 제목, 이용 안내, 게이지바를 통합한 싱글 블랙 박스 */
-        .master-dashboard-box {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            background-color: var(--container-bg);
             padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.2s ease;
         }
 
-        .master-title {
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
             font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0 0 30px 0; 
-            color: #ffffff;
+            color: var(--text-color);
+        }
+
+        /* 🌙 ☀️ 모드 전환 스위치 단추 커스텀 스타일 */
+        .theme-toggle-btn {
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
+            transition: all 0.2s ease;
         }
-        body.light-mode .master-title { color: #212529; }
+        .theme-toggle-btn:hover {
+            background-color: var(--item-hover);
+        }
 
-        .info-title {
-            color: var(--accent-orange);
+        /* 💡 이용 안내 블록 스펙 */
+        .info-box {
+            background-color: var(--box-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        .info-box ul {
+            list-style: none;
+            padding-left: 5px;
+        }
+        .info-box li {
+            margin-bottom: 6px;
+        }
+
+        /* 📈 실시간 달성도 미터 바 레이아웃 */
+        .progress-section {
+            background: var(--box-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .progress-row:last-child {
+            margin-bottom: 0;
+        }
+        .progress-label {
+            width: 160px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .progress-bar-wrapper {
+            flex: 1;
+            background-color: var(--progress-empty);
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9f1c, #70e000);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-count {
+            width: 100px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        /* 🎛️ 필터 컨트롤 그리드 보드 */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            background: var(--box-bg);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .filter-group-title {
             font-size: 0.95rem;
             font-weight: bold;
-            margin-bottom: 8px;
+            color: var(--text-color);
             display: flex;
             align-items: center;
             gap: 6px;
         }
-
-        .info-list {
-            margin: 0 0 5px 0;
-            padding-left: 0;
-            list-style: none;
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
-
-        .info-list li {
-            color: var(--text-main);
+        .search-wrapper {
+            display: flex;
+            gap: 6px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
             font-size: 0.9rem;
-            line-height: 1.7;
-            margin-bottom: 4px;
-            position: relative;
-            padding-left: 12px;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        button:hover, select:hover {
+            background-color: var(--item-hover);
+        }
+        button.active {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            font-weight: bold;
+            border-color: var(--primary-color);
+        }
+        body:not(.light-mode) button.active {
+            color: #000000; /* 다크모드일 땐 활성화 버튼 글씨를 검은색으로 고대비 노출 */
         }
 
-        .info-list li::before {
-            content: "-";
-            position: absolute;
-            left: 0;
-            color: var(--text-muted);
+        #current-path-display {
+            grid-column: 1 / -1;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: 5px;
+        }
+
+        /* 📊 데이터 테이블 스펙 */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        th {
+            background-color: var(--box-bg);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: var(--item-hover);
+        }
+        tr.completed {
+            background-color: rgba(112, 224, 0, 0.03);
+        }
+        tr.completed td {
+            color: var(--text-muted) !important;
+            opacity: 0.6;
+        }
+
+        /* 테이블 고정 비율 디바이드 */
+        .col-no { width: 5%; }
+        .col-check { width: 5%; }
+        .col-icon { width: 6%; }
+        .col-name { width: 24%; text-align: left; }
+        .col-cond { width: 8%; }
+        .col-type { width: 14%; }
+        .col-score { width: 30%; text-align: left; }
+        .col-rw-type { width: 8%; }
+
+        /* 📌 최하단 저작권 및 라이트/다크 양방향 대응 푸터 디자인 스타일 */
+        footer {
+            text-align: center;
+            padding: 35px 20px;
+            margin-top: 50px;
+            font-size: 0.8rem;
+            color: var(--footer-text);
+            line-height: 1.6;
+            border-top: 1px solid var(--footer-border);
+            transition: all 0.2s ease;
+        }
+        footer div {
+            margin-bottom: 3px;
+        }
+        .footer-highlight {
+            color: var(--footer-highlight);
+            font-weight: 500;
+            margin-top: 6px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 우측 상단 테마 토글 스위치 행 -->
-        <div class="top-header-row">
-            <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()">
-                <span id="theme-icon">🌙</span> <span id="theme-text">다크 모드</span>
-            </button>
-        </div>
-        <!-- 🌟 [게이지바 마스터 박스 부활 유지] 두 번째 스크린샷과 100% 완벽 일치하도록 그리드와 컴포넌트 고정 -->
-        <style>
-            .dashboard-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 20px;
-                margin-bottom: 25px;
-            }
 
-            .dashboard-item {
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 18px 22px;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                box-sizing: border-box;
-            }
-
-            .metric-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 0.95rem;
-                font-weight: 700;
-            }
-
-            .metric-title {
-                color: var(--text-main);
-            }
-
-            .metric-value {
-                color: #ffffff;
-            }
-            body.light-mode .metric-value { color: #212529; }
-
-            .progress-container {
-                background-color: #2a2a2a;
-                border-radius: 100px;
-                height: 10px;
-                overflow: hidden;
-                width: 100%;
-                position: relative;
-            }
-            body.light-mode .progress-container {
-                background-color: #e9ecef;
-            }
-
-            .progress-bar {
-                height: 100%;
-                width: 0%;
-                border-radius: 100px;
-                transition: width 0.4s ease-in-out;
-            }
-            
-            #total-bar {
-                background: linear-gradient(90deg, #555555, #888888);
-            }
-            
-            #chapter-bar {
-                background: linear-gradient(90deg, #06b6d4, #10b981);
-            }
-        </style>
-
-        <div class="master-dashboard-box">
-            <h1 class="master-title">FF14 아이템 획득 체크리스트</h1>
-            <div class="info-title">💡 이용 안내</div>
-            <ul class="info-list">
-                <li><strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
-                <li>개인 브라우저에 저장되는 도감 시스템입니다. 캐시 삭제 시 데이터가 초기화될 수 있습니다.</li>
-                <li>문의 사항은 질문방을 이용해 주시기 바랍니다.</li>
-            </ul>
-        </div>
-
-        <!-- 🌟 가로형 대시보드 및 실시간 연동 텍스트 일체화 구조 원본 보존 고정 -->
-        <div class="dashboard-grid">
-            <div class="dashboard-item">
-                <div class="metric-header">
-                    <span class="metric-title">전체 달성도: <span id="total-percent" style="color: var(--accent-orange);">0%</span></span>
-                    <span id="total-count" class="metric-value">(0/0)</span>
-                </div>
-                <div class="progress-container">
-                    <div id="total-bar" class="progress-bar"></div>
-                </div>
-            </div>
-
-            <div class="dashboard-item">
-                <div class="metric-header">
-                    <span class="metric-title"><span id="chapter-title-label">현재 분류 달성도</span>: <span id="chapter-percent" style="color: #10b981;">0%</span></span>
-                    <span id="chapter-count" class="metric-value">(0/0)</span>
-                </div>
-                <div class="progress-container">
-                    <div id="chapter-bar" class="progress-bar"></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="display:none;"><span id="score-total">0</span><span id="score-max">0</span><div id="score-bar"></div></div>
-
-        <!-- 🔍 통합 검색 영역 (이전 고유 패딩 크기 + 가로 너비 100% 밀착 동기화) -->
-        <style>
-            .search-section {
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 20px;
-                margin-bottom: 25px;
-                box-sizing: border-box; 
-                width: 100%;
-            }
-
-            .search-control-group {
-                display: flex;
-                gap: 8px;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .search-input {
-                flex: 1; 
-                background-color: #111111;
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                padding: 12px 16px;
-                color: #ffffff;
-                font-size: 0.95rem;
-                box-sizing: border-box;
-                transition: border-color 0.2s, background-color 0.3s;
-            }
-            body.light-mode .search-input {
-                background-color: #ffffff;
-                color: #212529;
-            }
-            .search-input:focus {
-                outline: none;
-                border-color: var(--accent-orange);
-            }
-        </style>
-        
-        <div class="search-section">
-            <label class="search-label" for="search-keyword">🔍 아이템 통합 검색</label>
-            <div class="search-input-wrapper">
-                <div class="search-control-group">
-                    <input type="text" id="search-keyword" class="search-input" placeholder="검색할 키워드를 입력하세요..." oninput="handleSearchInput()">
-                    <button id="clear-search-btn" class="clear-action-btn" onclick="clearSearchInputFilter()">초기화</button>
-                </div>
-            </div>
-        </div>
-        <!-- 필터 행 제어 전용 인터페이스 스타일 구조 정의 -->
-        <style>
-            .filter-section {
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-                margin-bottom: 25px;
-            }
-
-            .filter-row {
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 15px 20px;
-                transition: background-color 0.3s;
-            }
-
-            .filter-split-row {
-                display: flex;
-                gap: 15px;
-                width: 100%;
-            }
-            .filter-half-column {
-                flex: 1; 
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 8px;
-                padding: 15px 20px;
-                box-sizing: border-box;
-                transition: background-color 0.3s;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .filter-title {
-                font-size: 0.9rem;
-                font-weight: 600;
-                color: var(--text-muted);
-                margin-bottom: 12px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .btn-group {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .btn-group button {
-                background-color: #222222;
-                border: 1px solid #333333;
-                border-radius: 4px;
-                color: #dddddd;
-                padding: 8px 14px;
-                font-size: 0.85rem;
-                cursor: pointer;
-                transition: all 0.15s, background-color 0.3s;
-            }
-            body.light-mode .btn-group button {
-                background-color: #e9ecef;
-                border: 1px solid #dee2e6;
-                color: #495057;
-            }
-
-            .btn-group button:hover {
-                border-color: var(--accent-orange);
-                background-color: rgba(255, 159, 28, 0.1);
-            }
-
-            .btn-group button.active {
-                background-color: #3b82f6; 
-                border-color: #3b82f6;
-                color: #ffffff;
-                font-weight: bold;
-            }
-            .btn-group button.status-filter-btn.active {
-                background-color: #10b981; 
-                border-color: #10b981;
-            }
-            .btn-group button.reward-filter-btn.active {
-                background-color: #ef4444; 
-                border-color: #ef4444;
-            }
-            .btn-group button.sort-filter-btn.active {
-                background-color: #a855f7; 
-                border-color: #a855f7;
-            }
-
-            .dropdown-control-group {
-                display: flex;
-                gap: 8px;
-                width: 100%;
-                margin-top: 4px;
-            }
-
-            .filter-dropdown {
-                flex: 1;
-                background-color: #222222;
-                border: 1px solid #333333;
-                border-radius: 4px;
-                color: #dddddd;
-                padding: 10px 14px;
-                font-size: 0.85rem;
-                font-family: inherit;
-                cursor: pointer;
-                outline: none;
-                transition: all 0.15s;
-            }
-            body.light-mode .filter-dropdown {
-                background-color: #f1f3f5;
-                border: 1px solid #dee2e6;
-                color: #495057;
-            }
-            .filter-dropdown:hover, .filter-dropdown:focus {
-                border-color: var(--accent-orange);
-            }
-
-            .clear-action-btn {
-                background-color: #2a2a2a;
-                border: 1px solid #444444;
-                border-radius: 4px;
-                color: #ff6b6b;
-                padding: 10px 16px;
-                font-size: 0.85rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.15s;
-                white-space: nowrap;
-            }
-            body.light-mode .clear-action-btn {
-                background-color: #fff0f0;
-                border: 1px solid #fec5bb;
-                color: #e63946;
-            }
-            .clear-action-btn:hover {
-                border-color: #ff6b6b;
-                background-color: rgba(255, 107, 107, 0.1);
-            }
-
-            /* 🌟 [2번 사진 피드백 반영 여백 균형 보정 패치 완료] */
-            .path-display-box {
-                background-color: var(--path-bg);
-                border-left: 4px solid var(--accent-orange);
-                padding: 12px 18px;
-                border-radius: 4px;
-                font-weight: 600;
-                font-size: 0.95rem;
-                margin-bottom: 35px; /* 기존 20px ➡️ 35px 확장하여 하단 메인 표 테이블과 숨통 트이는 정간격을 구현했습니다. */
-                color: var(--path-text);
-                transition: background-color 0.3s, color 0.3s;
-            }
-        </style>
-
-        <div class="filter-section">
-            <div class="filter-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                <div>
-                    <div class="filter-title">✔ 아이템 획득 상태 필터</div>
-                    <div class="btn-group">
-                        <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
-                        <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
-                        <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div>
-                        <div class="filter-title">🔢 패치 버전 정렬</div>
-                        <div class="btn-group">
-                            <button id="sort-asc" class="sort-filter-btn" onclick="selectSortOrder('ASC')">패치 낮은순 ▲</button>
-                            <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="filter-title">🔤 획득처 이름 정렬</div>
-                        <div class="btn-group">
-                            <button id="sort-origin-asc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_ASC')">획득처 이름순 ▲</button>
-                            <button id="sort-origin-desc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_DESC')">획득처 역순 ▼</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="filter-row">
-                <div class="filter-title">📁 카테고리 선택</div>
-                <div id="main-category-group" class="btn-group">
-                    <button class="active">로딩 중...</button>
-                </div>
-            </div>
-
-            <div style="display: none;" id="sub-category-group"></div>
-
-            <div class="filter-split-row">
-                <div class="filter-half-column">
-                    <div class="filter-title">⚖️ 거래 여부</div>
-                    <div id="reward-category-group" class="btn-group">
-                        <button class="reward-filter-btn active">로딩 중...</button>
-                    </div>
-                </div>
-                <div class="filter-half-column">
-                    <div class="filter-title">🗺️ 획득처 필터</div>
-                    <div class="dropdown-control-group">
-                        <select id="condition-dropdown-filter" class="filter-dropdown" onchange="handleOriginDropdownChange(this)">
-                            <option value="ALL">전체 보기 (필터 해제)</option>
-                        </select>
-                        <button id="clear-origin-btn" class="clear-action-btn" onclick="clearOriginDropdownFilter()">초기화</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="current-path-display" class="path-display-box">
-            데이터를 로드하고 있습니다...
-        </div>
-        <!-- 테이블 및 TOP 고정 버튼 스타일 최적화 정의 -->
-        <style>
-            .table-responsive {
-                overflow-x: auto;
-                background-color: var(--card-bg); 
-                border: 1px solid var(--border-color); 
-                border-radius: 8px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                margin-bottom: 60px;
-                padding: 10px;
-                transition: background-color 0.3s, border-color 0.3s;
-            }
-
-            .item-table {
-                width: 100%;
-                border-collapse: collapse;
-                text-align: center;
-                font-size: 0.95rem;
-                background-color: var(--card-bg); 
-                transition: background-color 0.3s;
-            }
-
-            .item-table th {
-                background-color: var(--table-header); 
-                color: var(--text-muted);
-                padding: 14px 16px;
-                font-weight: 600;
-                border-bottom: 2px solid var(--border-color);
-                white-space: nowrap;
-                text-align: center;
-                transition: background-color 0.3s, border-color 0.3s;
-            }
-
-            .item-table td {
-                padding: 12px 16px;
-                border-bottom: 1px solid var(--border-color);
-                vertical-align: middle;
-                color: var(--text-main); 
-                transition: color 0.3s, border-color 0.3s;
-            }
-
-            .col-no { width: 4%; color: #888888; }
-            .col-check { width: 5%; }
-            .col-icon { width: 6%; }
-            .col-name { 
-                width: 24%; 
-                font-weight: bold; 
-                color: var(--text-main);
-                text-align: center;         
-                line-height: 1.4;          
-                word-break: break-all;     
-            }
-            
-            .col-cond { 
-                width: 1%; 
-                white-space: nowrap; 
-                padding-left: 5px; 
-                padding-right: 5px;
-                font-weight: 500; 
-                color: #0077b6; 
-            }
-            body:not(.light-mode) .col-cond {
-                color: #93c5fd; 
-            }
-            
-            .col-type { width: 14%; font-weight: bold; } 
-            .col-score { width: 36%; color: var(--text-muted); }  
-            .col-rw-type { width: 10%; }
-
-            .item-table input[type="checkbox"] {
-                width: 18px;
-                height: 18px;
-                cursor: pointer;
-                accent-color: var(--accent-orange);
-            }
-
-            .item-table tr.completed {
-                background-color: rgba(0, 0, 0, 0.02);
-            }
-            body:not(.light-mode) .item-table tr.completed {
-                background-color: rgba(255, 255, 255, 0.01);
-            }
-            
-            .item-table tr.completed td {
-                color: #aaaaaa !important; 
-            }
-            body:not(.light-mode) .item-table tr.completed td {
-                color: #444444 !important;
-            }
-            
-            .item-table tr.completed .col-name {
-                text-decoration: line-through;
-                color: #aaaaaa !important;
-            }
-            body:not(.light-mode) .item-table tr.completed .col-name {
-                color: #444444 !important;
-            }
-            
-            .item-table tr.completed .col-cond {
-                color: #aaaaaa !important;
-            }
-            body:not(.light-mode) .item-table tr.completed .col-cond {
-                color: #444444 !important;
-            }
-
-            .item-table tr:hover {
-                background-color: rgba(0, 0, 0, 0.01);
-            }
-            body:not(.light-mode) .item-table tr:hover {
-                background-color: rgba(255, 255, 255, 0.01);
-            }
-
-            .top-scroll-btn {
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                width: 44px;
-                height: 44px;
-                background-color: var(--card-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 4px; 
-                color: var(--text-main);
-                font-size: 1rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.2s ease;
-                z-index: 999;
-            }
-
-            .top-scroll-btn.show {
-                opacity: 1;
-                visibility: visible;
-            }
-
-            .top-scroll-btn:hover {
-                border-color: var(--accent-orange);
-                color: var(--accent-orange);
-            }
-        </style>
-
-        <div class="table-responsive">
-            <table class="item-table">
-                <thead>
-                    <tr>
-                        <th style="text-align: center;">NO</th>
-                        <th style="text-align: center;">보유</th>
-                        <th style="text-align: center;">아이콘</th>
-                        <th>이름</th>
-                        <th>패치</th>
-                        <th>획득처</th>
-                        <th>획득 방법</th>
-                        <th style="text-align: center;">거래 여부</th>
-                    </tr>
-                </thead>
-                <tbody id="achievement-list">
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 50px; color: var(--text-muted);">
-                            데이터베이스를 연동하는 중입니다...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<div class="container">
+    <div class="header-row">
+        <h1># FF14 아이템 획득 체크리스트</h1>
+        <!-- 💡 클릭 시 양방향 테마 모드가 스위칭되는 지능형 노드 단추 -->
+        <button class="theme-toggle-btn" id="theme-switcher-node" onclick="toggleThemeSystem()">🌙 다크 모드</button>
     </div>
 
-    <button id="topBtn" class="top-scroll-btn" onclick="scrollToTop()">▲</button>
+    <!-- 💡 이용 안내 블록 -->
+    <div class="info-box">
+        <div style="font-weight: bold; margin-bottom: 8px; color: var(--text-color);">💡 이용 안내</div>
+        <ul>
+            <li>• <strong>최종 업데이트:</strong> 26. 09. 18 (ver. 7.58)</li>
+            <li>• 개인 브라우저에 저장되는 도감 시스템입니다. 캐시 삭제 시 데이터가 초기화될 수 있습니다.</li>
+            <li>• 문의 사항은 질문방을 이용해 주시기 바랍니다.</li>
+        </ul>
+    </div>
 
-    <script>
-        const savedTheme = localStorage.getItem('theme_mode') || 'dark';
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-mode');
-            document.getElementById('theme-icon').textContent = '☀️';
-            document.getElementById('theme-text').textContent = '라이트 모드';
+    <!-- 📈 실시간 달성도 스위트 인프라 -->
+    <div class="progress-section">
+        <div class="progress-row">
+            <div class="progress-label">전체 달성도: <span id="total-percent">0%</span></div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="total-bar"></div>
+            </div>
+            <div class="progress-count" id="total-count">(0/0)</div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label" id="chapter-title-label">현재 분류 달성도: <span id="chapter-percent">0%</span></div>
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="chapter-bar"></div>
+            </div>
+            <div class="progress-count" id="chapter-count">(0/0)</div>
+        </div>
+    </div>
+    <!-- 🎛️ 다중 필터 제어 컨트롤러 보드 -->
+    <div class="filter-grid">
+        
+        <!-- 1. 아이템 통합 검색 -->
+        <div class="filter-group">
+            <div class="filter-group-title">🔍 아이템 통합 검색</div>
+            <div class="search-wrapper">
+                <input type="text" id="search-keyword" oninput="handleSearchInput()" placeholder="아이템 이름, 패치, 획득처 정보 등 실시간 검색...">
+                <button onclick="clearSearchInputFilter()">초기화</button>
+            </div>
+        </div>
+
+        <!-- 2. 아이템 획득 상태 필터 -->
+        <div class="filter-group">
+            <div class="filter-group-title">✔ 아이템 획득 상태 필터</div>
+            <div class="btn-group">
+                <button id="status-all" class="status-filter-btn active" onclick="selectStatusFilter('ALL')">전체 목록 보기</button>
+                <button id="status-uncompleted" class="status-filter-btn" onclick="selectStatusFilter('UNCOMPLETED')">미획득 아이템만 보기</button>
+                <button id="status-completed" class="status-filter-btn" onclick="selectStatusFilter('COMPLETED')">보유중인 아이템만 보기</button>
+            </div>
+        </div>
+
+        <!-- 3. 패치 버전 정렬 -->
+        <div class="filter-group">
+            <div class="filter-group-title">🔢 패치 버전 정렬</div>
+            <div class="btn-group">
+                <button id="sort-asc" class="sort-filter-btn" onclick="selectSortOrder('ASC')">패치 낮은순 ▲</button>
+                <button id="sort-desc" class="sort-filter-btn active" onclick="selectSortOrder('DESC')">패치 높은순 ▼</button>
+            </div>
+        </div>
+
+        <!-- 4. 획득처 이름 정렬 -->
+        <div class="filter-group">
+            <div class="filter-group-title">🔤 획득처 이름 정렬</div>
+            <div class="btn-group">
+                <button id="sort-origin-asc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_ASC')">획득처 이름순 ▲</button>
+                <button id="sort-origin-desc" class="sort-filter-btn" onclick="selectSortOrder('ORIGIN_DESC')">획득처 역순 ▼</button>
+            </div>
+        </div>
+
+        <!-- 5. 카테고리 선택 -->
+        <div class="filter-group" style="grid-column: span 2;">
+            <div class="filter-group-title">📁 카테고리 선택</div>
+            <div class="btn-group" id="main-category-group">
+                <button class="active">로딩 중...</button>
+            </div>
+        </div>
+
+        <!-- 6. 거래 여부 필터 -->
+        <div class="filter-group">
+            <div class="filter-group-title">⚖ 거래 여부</div>
+            <div class="btn-group" id="reward-category-group">
+                <button class="active">로딩 중...</button>
+            </div>
+        </div>
+
+        <!-- 7. 획득처 필터 드롭다운 -->
+        <div class="filter-group">
+            <div class="filter-group-title">🗺 획득처 필터</div>
+            <div class="search-wrapper">
+                <select id="condition-dropdown-filter" onchange="handleOriginDropdownChange(this)">
+                    <option value="ALL">전체 보기 (필터 해제)</option>
+                </select>
+                <button onclick="clearOriginDropdownFilter()">초기화</button>
+            </div>
+        </div>
+
+        <!-- 실시간 경로 안내판 인쇄부 -->
+        <div id="current-path-display">📂 분류 : 데이터를 로드하고 있습니다...</div>
+    </div>
+
+    <!-- 📊 메인 뷰포트 테이블 -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th class="col-no">NO</th>
+                    <th class="col-check">보유</th>
+                    <th class="col-icon">아이콘</th>
+                    <th class="col-name">이름</th>
+                    <th class="col-cond">패치</th>
+                    <th class="col-type">획득처</th>
+                    <th class="col-score">획득 방법</th>
+                    <th class="col-rw-type">거래 여부</th>
+                </tr>
+            </thead>
+            <tbody id="achievement-list">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 50px; color: var(--text-muted);">데이터베이스를 연동하는 중입니다...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 📌 요청하신 고해상도 저작권 문구 최하단 배치 완료 -->
+<footer>
+    <div>FF14 © KOR SQUARE ENIX Published in Korea by Actoz Soft CO., LTD.</div>
+    <div>FF14 © GLOBAL SQUARE ENIX CO., LTD. All Rights Reserved.</div>
+    <div class="footer-highlight">FF14 Item List © 검력</div>
+</footer>
+
+<!-- 🛡️ 다크/라이트 테마 제어용 빌트인 자바스크립트 엔진 -->
+<script>
+    // 페이지 첫 진입 시 사용자가 로컬스토리지에 설정해둔 이전 테마 캐시를 추적하여 동기화합니다.
+    const CACHED_THEME = localStorage.getItem('ff14_theme_mode') || 'dark';
+    const BTN_NODE = document.getElementById('theme-switcher-node');
+    
+    if (CACHED_THEME === 'light') {
+        document.body.classList.add('light-mode');
+        if(BTN_NODE) BTN_NODE.textContent = '☀️ 라이트 모드';
+    }
+
+    function toggleThemeSystem() {
+        const switcher = document.getElementById('theme-switcher-node');
+        document.body.classList.toggle('light-mode');
+        
+        if (document.body.classList.contains('light-mode')) {
+            switcher.textContent = '☀️ 라이트 모드';
+            localStorage.setItem('ff14_theme_mode', 'light');
+        } else {
+            switcher.textContent = '🌙 다크 모드';
+            localStorage.setItem('ff14_theme_mode', 'dark');
         }
+    }
+</script>
 
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            const text = document.getElementById('theme-text');
-            
-            if (body.classList.contains('light-mode')) {
-                body.classList.remove('light-mode');
-                icon.textContent = '🌙';
-                text.textContent = '다크 모드';
-                localStorage.setItem('theme_mode', 'dark');
-            } else {
-                body.classList.add('light-mode');
-                icon.textContent = '☀️';
-                text.textContent = '라이트 모드';
-                localStorage.setItem('theme_mode', 'light');
-            }
-        }
-
-        const topBtn = document.getElementById("topBtn");
-        window.onscroll = function() {
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                topBtn.classList.add("show");
-            } else {
-                topBtn.classList.remove("show");
-            }
-        };
-
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    </script>
-
-    <script src="app.js"></script>
+<!-- 데이터 통신 및 렌더링 코어 엔진 연동 파일 (app.js 상호작용 체인 유지) -->
+<script src="app.js"></script>
 </body>
 </html>
